@@ -1,0 +1,6 @@
+/courses/*/tiles/*
+  Cache-Control: public, max-age=604800
+/sw.js
+  Cache-Control: no-cache
+/maplibre-gl-worker.mjs
+  Content-Type: text/javascript

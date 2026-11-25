@@ -13,7 +13,8 @@
     "test:py": "tools/course-builder/.venv/bin/python -m pytest -q tools/course-builder",
     "build": "pnpm -r build",
     "format": "prettier --write . && tools/course-builder/.venv/bin/ruff format tools/course-builder",
-    "setup:py": "python3 -m venv tools/course-builder/.venv && tools/course-builder/.venv/bin/pip install -q -e 'tools/course-builder[dev]'"
+    "setup:py": "python3 -m venv tools/course-builder/.venv && tools/course-builder/.venv/bin/pip install -q -e 'tools/course-builder[dev]'",
+    "e2e": "pnpm --filter app build && pnpm --filter app e2e"
   },
   "devDependencies": {
     "eslint": "^9.39.5",
