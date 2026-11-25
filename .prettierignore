@@ -2,4 +2,5 @@ courses/
 pnpm-lock.yaml
 .superpowers/
 apps/app/public/courses/
+apps/app/public/sw.js
 tools/course-builder/.venv/
