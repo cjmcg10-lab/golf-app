@@ -5,8 +5,7 @@ import { join, resolve } from 'node:path';
 const root = resolve(import.meta.dirname, '../../..');
 const src = join(root, 'courses');
 const dst = resolve(import.meta.dirname, '../public/courses');
-// builder inputs and builder-only outputs stay out of the public site (elevation is unused until
-// the physics milestone ships it)
+// builder inputs and builder-only outputs stay out of the public site
 const SKIP = new Set([
   '.cache',
   'build.yaml',
@@ -15,7 +14,6 @@ const SKIP = new Set([
   'AI_NOTES.md',
   'review.html',
   'greens',
-  'elevation-course.bin',
 ]);
 
 rmSync(dst, { recursive: true, force: true });

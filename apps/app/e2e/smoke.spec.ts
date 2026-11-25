@@ -86,3 +86,10 @@ test('stalledNetworkUsesDownloadedCourse', async ({ page, context }) => {
   await page.goto('/hole/1');
   await expect(page.getByText('Hole 1', { exact: true })).toBeVisible({ timeout: 8_000 });
 });
+
+test('holeShows3dCaddy', async ({ page }) => {
+  await page.goto('/hole/12');
+  await expect(page.getByTestId('course-3d')).toBeVisible();
+  await expect(page.getByLabel('Caddy club')).toBeVisible({ timeout: 45_000 });
+  await expect(page.getByRole('button', { name: 'Hit' })).toBeEnabled();
+});

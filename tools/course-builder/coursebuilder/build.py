@@ -18,6 +18,7 @@ from .manual import apply_manual, load_manual
 from .merge import merge_features
 from .osm import boundary_polygon, contacts_from_boundary, fetch_osm, osm_to_features
 from .review import render_review
+from .scenery import osm_to_scenery
 
 REPO = Path(__file__).resolve().parents[3]
 
@@ -132,6 +133,7 @@ def build(course_id: str, skip_tiles=False, skip_elevation=False) -> int:
 
     (d / "course.json").write_text(json.dumps(_round(course), indent=1))
     (d / "features.geojson").write_text(json.dumps(_round(features)))
+    (d / "scenery.geojson").write_text(json.dumps(_round(osm_to_scenery(osm, bbox))))
 
     res = subprocess.run(
         ["pnpm", "-s", "--filter", "@golf/course-schema", "validate", str(d)],

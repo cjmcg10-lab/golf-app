@@ -49,11 +49,13 @@ describe('offline', () => {
       onProgress: (done, total) => progress.push(done / total),
     });
     const cache = cs.caches.get('course-mini-1')!;
-    expect(r.files).toBe(5);
+    expect(r.files).toBe(7);
     // '.complete' is the marker written last, after every file succeeded
     expect([...cache.store.keys()].filter((k) => !k.endsWith('.complete')).sort()).toEqual([
       '/courses/mini/course.json',
+      '/courses/mini/elevation-course.bin',
       '/courses/mini/features.geojson',
+      '/courses/mini/scenery.geojson',
       '/courses/mini/tiles/15/1/2.jpg',
       '/courses/mini/tiles/16/3/4.jpg',
       '/courses/mini/tiles/17/7/8.jpg',
@@ -102,7 +104,7 @@ describe('offline', () => {
     });
     const keys = [...cs.caches.get('course-mini-1')!.store.keys()];
     for (const k of shell) expect(keys).toContain(k);
-    expect(r.files).toBe(8);
+    expect(r.files).toBe(10);
   });
 
   test('noProgressAfterFailure', async () => {

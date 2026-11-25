@@ -47,6 +47,8 @@ export async function downloadForOffline(
     ...shell,
     `${base}/course.json`,
     `${base}/features.geojson`,
+    `${base}/scenery.geojson`,
+    `${base}/elevation-course.bin`,
     ...tiles.map((t) => `${base}/tiles/${t}`),
   ];
   const name = cacheName(id, version);

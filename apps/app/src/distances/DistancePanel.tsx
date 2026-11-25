@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 import { HazardList } from '../hole/HazardList';
-import { colors } from '../theme';
+import { colors, fonts } from '../theme';
 import type { Distances } from './useDistances';
 
 const fmt = (y: number | undefined | null) => (y == null ? '—' : String(Math.round(y)));
@@ -23,7 +23,7 @@ export function DistancePanel({ d, onClearTarget }: { d: Distances; onClearTarge
   return (
     <View
       style={{
-        backgroundColor: 'rgba(15,26,20,0.92)',
+        backgroundColor: colors.glass,
         borderRadius: 14,
         padding: 12,
         gap: 8,
@@ -37,7 +37,7 @@ export function DistancePanel({ d, onClearTarget }: { d: Distances; onClearTarge
           <Text style={{ color: colors.muted, fontSize: 11 }}>CENTER</Text>
           <Text
             accessibilityLabel="Center of green"
-            style={{ color: colors.accent, fontSize: 44, fontWeight: '800', lineHeight: 48 }}
+            style={{ color: colors.accent, fontSize: 40, fontWeight: '800', lineHeight: 44, fontFamily: fonts.heading }}
           >
             {fmt(d.green?.center)}
           </Text>
