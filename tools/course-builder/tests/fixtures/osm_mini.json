@@ -1,0 +1,102 @@
+{
+  "version": "0.6",
+  "elements": [
+    { "type": "node", "id": 1, "lat": 41.564, "lon": -72.871 },
+    { "type": "node", "id": 2, "lat": 41.564, "lon": -72.861 },
+    { "type": "node", "id": 3, "lat": 41.57, "lon": -72.861 },
+    { "type": "node", "id": 4, "lat": 41.57, "lon": -72.871 },
+    {
+      "type": "way",
+      "id": 1000,
+      "nodes": [1, 2, 3, 4, 1],
+      "tags": {
+        "leisure": "golf_course",
+        "name": "Mini CC",
+        "phone": "+1-860-628-7032",
+        "website": "https://example.com/",
+        "addr:housenumber": "1",
+        "addr:street": "Test Rd",
+        "addr:city": "Testville",
+        "addr:state": "CT",
+        "addr:postcode": "06000"
+      }
+    },
+    { "type": "node", "id": 5, "lat": 41.566, "lon": -72.869 },
+    { "type": "node", "id": 6, "lat": 41.5661, "lon": -72.8675 },
+    { "type": "node", "id": 7, "lat": 41.566, "lon": -72.8661 },
+    {
+      "type": "way",
+      "id": 1,
+      "nodes": [5, 6, 7],
+      "tags": { "golf": "hole", "ref": "1", "par": "4" }
+    },
+    { "type": "node", "id": 8, "lat": 41.565850000000005, "lon": -72.8662 },
+    { "type": "node", "id": 9, "lat": 41.565850000000005, "lon": -72.8658 },
+    { "type": "node", "id": 10, "lat": 41.56615, "lon": -72.8658 },
+    { "type": "node", "id": 11, "lat": 41.56615, "lon": -72.8662 },
+    { "type": "way", "id": 11, "nodes": [8, 9, 10, 11, 8], "tags": { "golf": "green" } },
+    { "type": "node", "id": 12, "lat": 41.56602, "lon": -72.86595, "tags": { "golf": "pin" } },
+    { "type": "node", "id": 13, "lat": 41.56595, "lon": -72.86908 },
+    { "type": "node", "id": 14, "lat": 41.56595, "lon": -72.86892 },
+    { "type": "node", "id": 15, "lat": 41.566050000000004, "lon": -72.86892 },
+    { "type": "node", "id": 16, "lat": 41.566050000000004, "lon": -72.86908 },
+    { "type": "way", "id": 12, "nodes": [13, 14, 15, 16, 13], "tags": { "golf": "tee" } },
+    { "type": "node", "id": 17, "lat": 41.56577, "lon": -72.86645 },
+    { "type": "node", "id": 18, "lat": 41.56577, "lon": -72.86635 },
+    { "type": "node", "id": 19, "lat": 41.565830000000005, "lon": -72.86635 },
+    { "type": "node", "id": 20, "lat": 41.565830000000005, "lon": -72.86645 },
+    {
+      "type": "way",
+      "id": 13,
+      "nodes": [17, 18, 19, 20, 17],
+      "tags": { "golf": "bunker", "surface": "sand" }
+    },
+    { "type": "node", "id": 21, "lat": 41.5655, "lon": -72.869 },
+    { "type": "node", "id": 22, "lat": 41.5655, "lon": -72.866 },
+    {
+      "type": "way",
+      "id": 14,
+      "nodes": [21, 22],
+      "tags": { "golf": "cartpath", "highway": "service" }
+    },
+    { "type": "node", "id": 23, "lat": 41.5665, "lon": -72.8635 },
+    { "type": "node", "id": 24, "lat": 41.5677, "lon": -72.8635 },
+    {
+      "type": "way",
+      "id": 2,
+      "nodes": [23, 24],
+      "tags": { "golf": "hole", "ref": "2", "par": "3" }
+    },
+    { "type": "node", "id": 25, "lat": 41.5675, "lon": -72.86365 },
+    { "type": "node", "id": 26, "lat": 41.5675, "lon": -72.86335 },
+    { "type": "node", "id": 27, "lat": 41.5679, "lon": -72.86335 },
+    { "type": "node", "id": 28, "lat": 41.5679, "lon": -72.86365 },
+    { "type": "way", "id": 21, "nodes": [25, 26, 27, 28, 25], "tags": { "golf": "green" } },
+    { "type": "node", "id": 29, "lat": 41.5678, "lon": -72.8635, "tags": { "golf": "pin" } },
+    { "type": "node", "id": 30, "lat": 41.5669, "lon": -72.8639 },
+    { "type": "node", "id": 31, "lat": 41.5669, "lon": -72.8637 },
+    { "type": "node", "id": 32, "lat": 41.5671, "lon": -72.8637 },
+    { "type": "node", "id": 33, "lat": 41.5671, "lon": -72.8639 },
+    { "type": "way", "id": 22, "nodes": [30, 31, 32, 33, 30], "tags": { "golf": "water_hazard" } },
+    { "type": "node", "id": 34, "lat": 41.5678, "lon": -72.86229999999999 },
+    { "type": "node", "id": 35, "lat": 41.5678, "lon": -72.8617 },
+    { "type": "node", "id": 36, "lat": 41.5682, "lon": -72.8617 },
+    { "type": "node", "id": 37, "lat": 41.5682, "lon": -72.86229999999999 },
+    { "type": "way", "id": 30, "nodes": [34, 35, 36, 37, 34], "tags": { "natural": "wood" } },
+    { "type": "node", "id": 38, "lat": 41.5689, "lon": -72.8657 },
+    { "type": "node", "id": 39, "lat": 41.5689, "lon": -72.86529999999999 },
+    { "type": "node", "id": 40, "lat": 41.569100000000006, "lon": -72.86529999999999 },
+    { "type": "node", "id": 41, "lat": 41.569100000000006, "lon": -72.8657 },
+    {
+      "type": "way",
+      "id": 31,
+      "nodes": [38, 39, 40, 41, 38],
+      "tags": { "golf": "clubhouse", "building": "yes" }
+    },
+    { "type": "node", "id": 42, "lat": 41.5798, "lon": -72.8502 },
+    { "type": "node", "id": 43, "lat": 41.5798, "lon": -72.84979999999999 },
+    { "type": "node", "id": 44, "lat": 41.5802, "lon": -72.84979999999999 },
+    { "type": "node", "id": 45, "lat": 41.5802, "lon": -72.8502 },
+    { "type": "way", "id": 99, "nodes": [42, 43, 44, 45, 42], "tags": { "golf": "green" } }
+  ]
+}
