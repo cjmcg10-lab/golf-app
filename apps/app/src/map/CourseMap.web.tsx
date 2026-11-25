@@ -1,7 +1,13 @@
 import type { LngLat } from '@golf/course-schema';
 import { holeBearing } from '@golf/geo';
 import type { FeatureCollection } from 'geojson';
-import { Map as MlMap, setWorkerUrl, type GeoJSONSource, type LngLatBoundsLike } from 'maplibre-gl';
+import {
+  AttributionControl,
+  Map as MlMap,
+  setWorkerUrl,
+  type GeoJSONSource,
+  type LngLatBoundsLike,
+} from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useEffect, useRef } from 'react';
 import { FEATURE_COLORS } from '../theme';
@@ -47,7 +53,7 @@ export function CourseMap({
         [w, s],
         [e, n],
       ],
-      attributionControl: { compact: true },
+      attributionControl: false,
       maxZoom: 20,
       dragRotate: false,
       pitchWithRotate: false,
@@ -59,6 +65,8 @@ export function CourseMap({
                 type: 'raster',
                 tiles: [course.imagery.tiles],
                 tileSize: 256,
+                // only request tiles that exist (others would 404 into the SPA fallback)
+                bounds: course.bounds,
                 minzoom: course.imagery.minzoom,
                 maxzoom: course.imagery.maxzoom,
                 attribution: '© OpenStreetMap contributors · USDA NAIP · USGS',
@@ -72,6 +80,7 @@ export function CourseMap({
       },
     });
     m.touchZoomRotate.disableRotation();
+    m.addControl(new AttributionControl({ compact: true }), 'top-right');
     m.on('load', () => {
       m.addSource('features', { type: 'geojson', data: features });
       m.addLayer({
