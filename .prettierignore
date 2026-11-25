@@ -1,0 +1,5 @@
+courses/
+pnpm-lock.yaml
+.superpowers/
+apps/app/public/courses/
+tools/course-builder/.venv/

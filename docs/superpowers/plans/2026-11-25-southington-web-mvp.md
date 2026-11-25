@@ -69,6 +69,7 @@ apps/app/ (Expo): app/{_layout.tsx,index.tsx,hole/[n].tsx,info.tsx}, src/{course
 **Files:** `CLAUDE.md`, `.claude/agents/*.md` (4), `.claude/skills/*/SKILL.md` (4), `.claude/settings.json`, `.claude/hooks/format.sh`, `.claude/hooks/block-force-push.sh`, `.github/ISSUE_TEMPLATE/ticket.md`, `.github/workflows/ci.yml`, `docs/plans/.gitkeep`.
 
 Decisions (fixed):
+
 - Tickets: GitHub Issues on `cjmcg10-lab/golf-app`, read via GitHub MCP (`issue_read`). Issue template has sections Summary / Acceptance criteria (checkbox list) / Mockups / Out of scope. No AC → ask the owner.
 - Branches `feat/<issue>-<slug>`, `fix/<issue>-<slug>`, `chore/<slug>`; Conventional Commits; squash merge; only the owner merges.
 - The review skill is named `/pr-review` (avoids clashing with Claude Code's built-in `/review`).
@@ -93,33 +94,82 @@ Decisions (fixed):
 **Files:** `packages/course-schema/src/{types.ts,validate.ts,cli.ts,index.ts}`, `packages/course-schema/test/validate.test.ts`, fixture `test/fixtures/mini/{course.json,features.geojson}` (2-hole course).
 
 **Interfaces — Produces:**
+
 ```ts
 export type LngLat = [lng: number, lat: number];
-export type FeatureKind = 'green'|'fairway'|'tee'|'bunker'|'water'|'rough'|'trees'|'cartpath'|'ob'|'clubhouse';
-export type Source = 'osm'|'ai'|'manual';
-export interface FeatureProps { id: string; kind: FeatureKind; hole: number|null; source: Source; confidence: number }
-export interface Contact { label: string; phone: string }           // phone in E.164
-export interface TeeSet { id: string; name: string; color: string|null; rating: number|null; slope: number|null }
+export type FeatureKind =
+  | 'green'
+  | 'fairway'
+  | 'tee'
+  | 'bunker'
+  | 'water'
+  | 'rough'
+  | 'trees'
+  | 'cartpath'
+  | 'ob'
+  | 'clubhouse';
+export type Source = 'osm' | 'ai' | 'manual';
+export interface FeatureProps {
+  id: string;
+  kind: FeatureKind;
+  hole: number | null;
+  source: Source;
+  confidence: number;
+}
+export interface Contact {
+  label: string;
+  phone: string;
+} // phone in E.164
+export interface TeeSet {
+  id: string;
+  name: string;
+  color: string | null;
+  rating: number | null;
+  slope: number | null;
+}
 export interface Hole {
-  number: number; par: number; handicap: number|null;
-  playLine: LngLat[];                     // tee → (dogleg points) → green centre
-  measuredYards: number;                  // length of playLine
-  yards: Record<string, number|null>;     // per TeeSet.id, from scorecard
+  number: number;
+  par: number;
+  handicap: number | null;
+  playLine: LngLat[]; // tee → (dogleg points) → green centre
+  measuredYards: number; // length of playLine
+  yards: Record<string, number | null>; // per TeeSet.id, from scorecard
   pin: LngLat;
   green: { front: LngLat; center: LngLat; back: LngLat };
   featureIds: string[];
 }
 export interface Course {
-  schemaVersion: 1; id: string; version: string; name: string; address: string;
-  location: LngLat; bounds: [w: number, s: number, e: number, n: number];
-  par: number; website: string|null; contacts: Contact[]; teeSets: TeeSet[]; holes: Hole[];
+  schemaVersion: 1;
+  id: string;
+  version: string;
+  name: string;
+  address: string;
+  location: LngLat;
+  bounds: [w: number, s: number, e: number, n: number];
+  par: number;
+  website: string | null;
+  contacts: Contact[];
+  teeSets: TeeSet[];
+  holes: Hole[];
   imagery: { tiles: string; minzoom: number; maxzoom: number; attribution: string } | null;
-  elevation: { course: string; greens: Record<string, string>; greenSource: 'lidar'|'dem' } | null;
+  elevation: {
+    course: string;
+    greens: Record<string, string>;
+    greenSource: 'lidar' | 'dem';
+  } | null;
   attribution: string[];
 }
-export interface ValidationIssue { level: 'error'|'warning'; path: string; message: string }
-export function validateCourse(course: unknown, features: GeoJSON.FeatureCollection): ValidationIssue[];
+export interface ValidationIssue {
+  level: 'error' | 'warning';
+  path: string;
+  message: string;
+}
+export function validateCourse(
+  course: unknown,
+  features: GeoJSON.FeatureCollection,
+): ValidationIssue[];
 ```
+
 CLI: `pnpm --filter @golf/course-schema validate <dir>` prints issues, exits 1 if any error.
 
 - [ ] Step 1: Tests in `validate.test.ts`: `validMini` (fixture → `[]`); `parSumMismatch` (course.par 71 vs holes sum 70 → error at `par`); `holeMissingPin` → error `holes[0].pin`; `featureIdUnknown` (hole references id not in features → error); `badPhone` (`"860-628-7032"` → error, E.164 required); `yardsFarFromMeasured` (yards 400 vs measured 300 → warning, >10%); `confidenceOutOfRange` → error.
@@ -133,6 +183,7 @@ CLI: `pnpm --filter @golf/course-schema validate <dir>` prints issues, exits 1 i
 **Files:** `coursebuilder/osm.py`, `coursebuilder/derive.py`, `coursebuilder/manual.py`, `tests/test_osm.py`, `tests/test_derive.py`, `tests/fixtures/osm_mini.json` (API 0.6 `map.json` excerpt: boundary way, 2 hole ways, greens, pins, a bunker, a cart path, clubhouse node with phone).
 
 **Interfaces — Produces:**
+
 - `fetch_osm(bbox: tuple[float,float,float,float]) -> dict` — GET `https://api.openstreetmap.org/api/0.6/map.json?bbox=w,s,e,n` with a generic User-Agent; caches to `courses/<id>/.cache/osm.json`. (Overpass is unreliable through this proxy; the main API works.)
 - `osm_to_features(osm: dict, boundary_way_id: int) -> FeatureCollection` — ways → polygons/lines using the tag map `golf=green|fairway|tee|bunker|water_hazard→water|lateral_water_hazard→water|rough|cartpath|clubhouse`, `natural=water→water`, `natural=wood|landuse=forest→trees`; only features inside the boundary; `id="osm-way-<id>"`, `source="osm"`, `confidence=1.0`; `hole` assigned to the hole whose playLine is nearest (greens/tees/fairways/bunkers/water within 60 m), else null.
 - `derive_holes(osm: dict, features: FeatureCollection) -> list[dict]` — one Hole per `golf=hole` way (`ref`, `par`, `handicap` if tagged); `playLine` = the way's coordinates; `pin` = the `golf=pin` node inside or nearest that hole's green; green front/back = the points where the extended last playLine segment enters/leaves the green polygon, centre = midpoint of those; `measuredYards` = geodesic playLine length / 0.9144, rounded.
@@ -149,6 +200,7 @@ CLI: `pnpm --filter @golf/course-schema validate <dir>` prints issues, exits 1 i
 **Files:** `coursebuilder/elevation.py`, `coursebuilder/imagery.py`, `tests/test_elevation.py`, `tests/test_imagery.py`.
 
 **Interfaces — Produces:**
+
 - Elevation file format `GELV` v1 (little-endian), shared with TS readers in M4:
   `magic "GELV"(4) | version u16=1 | reserved u16 | width u32 | height u32 | west f64 | north f64 | dLon f64 | dLat f64 | base f32 | scale f32` (52 bytes) then `width*height` u16 row-major from north-west; value 65535 = nodata; metres = `base + v*scale`.
 - `write_gelv(path, grid: np.ndarray, west, north, dlon, dlat) -> None`, `read_gelv(path) -> tuple[np.ndarray, dict]`; `scale` chosen so the grid's range fits in 0–65534 (≤ 1 mm for a course).
@@ -167,6 +219,7 @@ CLI: `pnpm --filter @golf/course-schema validate <dir>` prints issues, exits 1 i
 **Files:** `coursebuilder/merge.py`, `coursebuilder/review.py`, `coursebuilder/build.py`, `tests/test_merge.py`, `courses/southington-cc/{manual.yaml,ai.geojson}` + generated outputs.
 
 **Interfaces:**
+
 - Consumes Tasks 3–5.
 - `merge_features(osm_fc, ai_fc, manual_fc|None) -> FeatureCollection` — AI features with the same kind overlapping an OSM feature by IoU > 0.5 are dropped (OSM wins); otherwise added; manual always added and wins over both.
 - `build.py <course-id>` CLI: reads `courses/<id>/build.yaml` (`osm_boundary_way: 43440837`, bbox padded 50 m), runs fetch → features → merge → holes → manual → elevation → tiles → writes `course.json` + `features.geojson` → runs the TS validator CLI and fails on errors → writes `review.html`.
@@ -186,15 +239,28 @@ CLI: `pnpm --filter @golf/course-schema validate <dir>` prints issues, exits 1 i
 **Files:** `packages/geo/src/{distance.ts,hole.ts,index.ts}`, `packages/geo/test/{distance.test.ts,hole.test.ts}`.
 
 **Interfaces — Produces:**
+
 ```ts
-export function distanceYards(a: LngLat, b: LngLat): number;          // haversine, R=6371008.8 m
-export function bearingDeg(a: LngLat, b: LngLat): number;             // 0..360, from north
-export interface HazardDistance { id: string; kind: FeatureKind; frontYards: number; backYards: number }
-export function hazardDistances(from: LngLat, hole: Hole, features: GeoJSON.FeatureCollection): HazardDistance[];
-  // for bunker/water features of this hole: front = nearest polygon point, back = farthest point
-  // along the line from→green.center (points within ±15° of that bearing), sorted by frontYards
-export function greenDistances(from: LngLat, hole: Hole): { front: number; center: number; back: number };
-export function holeBearing(hole: Hole): number;                      // playLine[0] → green.center
+export function distanceYards(a: LngLat, b: LngLat): number; // haversine, R=6371008.8 m
+export function bearingDeg(a: LngLat, b: LngLat): number; // 0..360, from north
+export interface HazardDistance {
+  id: string;
+  kind: FeatureKind;
+  frontYards: number;
+  backYards: number;
+}
+export function hazardDistances(
+  from: LngLat,
+  hole: Hole,
+  features: GeoJSON.FeatureCollection,
+): HazardDistance[];
+// for bunker/water features of this hole: front = nearest polygon point, back = farthest point
+// along the line from→green.center (points within ±15° of that bearing), sorted by frontYards
+export function greenDistances(
+  from: LngLat,
+  hole: Hole,
+): { front: number; center: number; back: number };
+export function holeBearing(hole: Hole): number; // playLine[0] → green.center
 ```
 
 - [ ] Step 1: Tests: `distanceKnown` (two points 100 m apart → 109.4 ±0.2); `bearingCardinal` (due east → 90 ±0.5); `greenDistancesOrdered` (front < center < back from the tee); `hazardSorted`; `holeWithoutHazards` (no bunker/water → `[]`).
@@ -206,6 +272,7 @@ export function holeBearing(hole: Hole): number;                      // playLin
 **Files:** `apps/app/` (create with `create-expo-app` tabs-less template, SDK 58), `app/_layout.tsx`, `app/index.tsx`, `src/course/loadCourse.ts`, `src/map/CourseMap.web.tsx`, `src/map/CourseMap.tsx`, `scripts/copy-courses.mjs`, `src/course/loadCourse.test.ts`.
 
 **Interfaces:**
+
 - Consumes `Course`, `validateCourse` (Task 3).
 - `loadCourse(id: string, fetcher = fetch): Promise<{ course: Course; features: FeatureCollection }>` — fetches `/courses/<id>/course.json` + `features.geojson`, validates, throws `CourseLoadError` on network failure or validation errors.
 - `<CourseMap course features holeNumber?: number bearing?: number userLocation?: LngLat|null onTapPoint?: (p: LngLat) => void />` — web: maplibre-gl with NAIP raster source `course.imagery.tiles`, vector layers per kind (green #3fae49, fairway #7fc96b, tee #9ad48a, bunker #e8d9a8, water #3d8fd6, trees #2f5d2f, rough #5b8f4a, cartpath #9a9a9a), OSM + NAIP attribution control; native file renders a "Map available in the mobile build" placeholder (M5).
@@ -231,6 +298,7 @@ export function holeBearing(hole: Hole): number;                      // playLin
 **Files:** `src/location/useLocation.ts`, `src/distances/useDistances.ts`, `src/distances/DistancePanel.tsx`, tests alongside.
 
 **Interfaces:**
+
 - `useLocation(): { fix: { at: LngLat; accuracyM: number } | null; status: 'pending'|'ok'|'denied'|'unavailable' }` — web `navigator.geolocation.watchPosition({ enableHighAccuracy: true, maximumAge: 1000 })`.
 - `useDistances(hole, features, fix, target: LngLat|null) -> { origin: 'gps'|'tee'; offCourse: boolean; green: {front,center,back}|null; hazards: HazardDistance[]; toTarget: number|null; targetToGreen: number|null; accuracyYards: number|null }` — origin = GPS fix, else hole tee (`playLine[0]`); `offCourse` when GPS distance to green centre > 1000 yds (then `green` is null); accuracy label shown when `accuracyM > 30`.
 - Tap on map sets `target`; panel shows "To target X · target to green Y".
@@ -244,6 +312,7 @@ export function holeBearing(hole: Hole): number;                      // playLin
 **Files:** `app/info.tsx`, `src/course/offline.ts`, `src/course/offline.test.ts`, `public/sw.js`.
 
 **Interfaces:**
+
 - Info screen: name, address (opens maps link), website, each `contacts[]` as a button "Call <label>" → `Linking.openURL('tel:<phone>')`; data attribution list.
 - `downloadForOffline(courseId): Promise<{ files: number; bytes: number }>` — fetches `course.json`, `features.geojson` and every path in `tiles/index.json` into Cache Storage `course-<id>-<version>`; progress callback; `isDownloaded(courseId)`. `sw.js` serves `/courses/**` cache-first from that cache, network for everything else.
 

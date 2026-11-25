@@ -60,16 +60,16 @@ until store release.
 
 ## 5. Approaches considered
 
-| Option | Trade-off | Decision |
-|---|---|---|
+| Option                                                              | Trade-off                                                                                                 | Decision   |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ---------- |
 | **Expo (React Native) + react-native-web, one TypeScript codebase** | One codebase for iOS/Android/web; good maps (MapLibre) and background location; JS physics is fast enough | **Chosen** |
-| Flutter | Excellent mobile perf, but heavier/slower web, and web is the first test target | Rejected |
-| Native Swift + Kotlin + separate web | Best perf, ~3× the work and three codebases | Rejected |
+| Flutter                                                             | Excellent mobile perf, but heavier/slower web, and web is the first test target                           | Rejected   |
+| Native Swift + Kotlin + separate web                                | Best perf, ~3× the work and three codebases                                                               | Rejected   |
 
-| Backend option | Trade-off | Decision |
-|---|---|---|
+| Backend option                                                    | Trade-off                                                                                   | Decision   |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ---------- |
 | **Cloudflare (Workers, D1, Durable Objects, R2, Pages) + GitHub** | Owner already uses GitHub + Cloudflare; generous free tier; no project pausing; free egress | **Chosen** |
-| Supabase | Built-in auth + realtime, but free projects pause after a week idle; second vendor | Rejected |
+| Supabase                                                          | Built-in auth + realtime, but free projects pause after a week idle; second vendor          | Rejected   |
 
 ## 6. Architecture
 
@@ -86,21 +86,21 @@ courses/southington-cc/ Built package source (JSON/GeoJSON committed; large rast
 
 ### 6.1 Free services used
 
-| Need | Service | Free limit that matters |
-|---|---|---|
-| Web hosting | Cloudflare Pages | Unlimited bandwidth |
-| API | Cloudflare Workers | 100k requests/day |
-| Database | Cloudflare D1 (SQLite) | 5 GB, 5M reads/day |
-| Live round state | Durable Objects (SQLite-backed, WebSocket hibernation) | 100k req/day on free plan |
-| Course files, imagery tiles | Cloudflare Pages static assets (same deploy as the web app) | 25 MB per file, 20k files; no payment method needed (R2 was rejected because it requires a card on file) |
-| CI, course builds | GitHub Actions | 2,000 min/month (private) |
-| Weather | US National Weather Service API (api.weather.gov) | Free, public domain, no key |
-| Elevation | USGS 3DEP (1 m DEM + LiDAR point cloud) | Public domain |
-| Aerial imagery | USDA NAIP via Microsoft Planetary Computer (2023, 0.3 m) | Public domain |
-| Base map data | OpenStreetMap (ODbL — attribution required) | Free |
-| Map renderer | MapLibre (maplibre-gl on web, @maplibre/maplibre-react-native on mobile) | OSS |
-| Auth | Better Auth library on Worker + D1 | OSS |
-| Mobile builds | Expo EAS free tier, or local builds | Limited builds/month |
+| Need                        | Service                                                                  | Free limit that matters                                                                                  |
+| --------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| Web hosting                 | Cloudflare Pages                                                         | Unlimited bandwidth                                                                                      |
+| API                         | Cloudflare Workers                                                       | 100k requests/day                                                                                        |
+| Database                    | Cloudflare D1 (SQLite)                                                   | 5 GB, 5M reads/day                                                                                       |
+| Live round state            | Durable Objects (SQLite-backed, WebSocket hibernation)                   | 100k req/day on free plan                                                                                |
+| Course files, imagery tiles | Cloudflare Pages static assets (same deploy as the web app)              | 25 MB per file, 20k files; no payment method needed (R2 was rejected because it requires a card on file) |
+| CI, course builds           | GitHub Actions                                                           | 2,000 min/month (private)                                                                                |
+| Weather                     | US National Weather Service API (api.weather.gov)                        | Free, public domain, no key                                                                              |
+| Elevation                   | USGS 3DEP (1 m DEM + LiDAR point cloud)                                  | Public domain                                                                                            |
+| Aerial imagery              | USDA NAIP via Microsoft Planetary Computer (2023, 0.3 m)                 | Public domain                                                                                            |
+| Base map data               | OpenStreetMap (ODbL — attribution required)                              | Free                                                                                                     |
+| Map renderer                | MapLibre (maplibre-gl on web, @maplibre/maplibre-react-native on mobile) | OSS                                                                                                      |
+| Auth                        | Better Auth library on Worker + D1                                       | OSS                                                                                                      |
+| Mobile builds               | Expo EAS free tier, or local builds                                      | Limited builds/month                                                                                     |
 
 Verified on 2026-11-25: OSM has Southington mapped (18 holes with par summing
 to 71, 18 pins, 20 greens, 37 tees, 25 fairways, 29 bunkers, 37 cart paths, 3
@@ -155,6 +155,7 @@ Runs offline (local or GitHub Actions), never on the phone.
 ## 9. App
 
 ### 9.1 Screens
+
 - **Course** (map of whole course) → **Hole** view (rotated so tee is at the bottom,
   imagery + features, distance arcs).
 - **Live distances**: from player GPS to front/centre/back of green, to hazards
@@ -173,6 +174,7 @@ Runs offline (local or GitHub Actions), never on the phone.
 - **Course info**: contacts with tap-to-call (`tel:` link), address, website.
 
 ### 9.2 Location
+
 - Foreground: high-accuracy GPS, 1 s updates for distances.
 - Background (native only): expo-location + expo-task-manager, distance filter
   ~10 m, sent to the round's Durable Object at most every 10 s.
@@ -188,6 +190,7 @@ Runs offline (local or GitHub Actions), never on the phone.
   native milestone.
 
 ### 9.3 Performance
+
 - Course package cached locally; app works without signal except live friends/weather.
 - MapLibre GPU rendering; features as vector layers, imagery as raster tiles.
 - Physics in plain TS, target < 5 ms per shot simulation on a mid-range Android.
@@ -214,6 +217,7 @@ Runs offline (local or GitHub Actions), never on the phone.
 ## 11. Physics engine (`packages/physics`)
 
 ### 11.1 Ball flight
+
 - 3-D point-mass model integrated with RK4 (dt ≈ 5 ms), forces: gravity, drag,
   Magnus lift; spin decays exponentially over flight.
 - Drag and lift coefficients as functions of Reynolds number and spin ratio,
@@ -227,6 +231,7 @@ Runs offline (local or GitHub Actions), never on the phone.
   its path (DEM), not a flat plane.
 
 ### 11.2 Stock shot
+
 - Default launch conditions are tour-average numbers per club (ball speed, launch
   angle, spin) from publicly available launch-monitor averages; for an arbitrary
   carry, interpolate between clubs.
@@ -234,6 +239,7 @@ Runs offline (local or GitHub Actions), never on the phone.
   the later "advanced player" feature only adds an input screen.
 
 ### 11.3 Landing and rollout
+
 - On landing: bounce + roll model driven by landing angle, landing speed,
   remaining spin, surface type (green / fairway / rough / bunker from features)
   and local slope from the DEM. Surface firmness/friction constants per type,
@@ -242,6 +248,7 @@ Runs offline (local or GitHub Actions), never on the phone.
 - Output: carry point, final resting point, total distance, apex, flight time.
 
 ### 11.4 Plays-like and auto caddy
+
 - **Plays-like distance**: the calm, sea-level, flat-ground carry that would land at
   the target under current conditions (solved by bisection on ball speed).
 - **Player clubs**: player's carries are assumed measured in "standard" conditions
@@ -253,6 +260,7 @@ Runs offline (local or GitHub Actions), never on the phone.
   on the green surface. Full putt-break simulation is later.
 
 ### 11.5 Validation
+
 Unit tests compare stock simulations at standard conditions with published
 tour-average carries (driver, 7-iron, PW within ±5 %), and check sensible direction
 and rough magnitude of effects (e.g. ~1 % more carry per ~1,000 ft altitude band
@@ -264,13 +272,13 @@ Tier is a field on the user (`free` | `pro`). Gating is real in every build,
 including the deployed web test. Pro is granted by an admin-only endpoint (owner's
 account is admin); during testing the owner grants Pro to testers.
 
-| Free | Paid (Pro) |
-|---|---|
-| Course map, hole view, GPS distances (front/centre/back, hazards, tap-to-target) | Plays-like distances (weather + elevation) |
-| Friends on the map, walking/cart | Shot planner: carry, rollout, landing spot |
-| Shared scorecard, rounds | Auto caddy |
-| Course info + tap-to-call | Green slope view |
-| My bag (club distances) | Later: personal launch/spin, mini-games (TBD) |
+| Free                                                                             | Paid (Pro)                                    |
+| -------------------------------------------------------------------------------- | --------------------------------------------- |
+| Course map, hole view, GPS distances (front/centre/back, hazards, tap-to-target) | Plays-like distances (weather + elevation)    |
+| Friends on the map, walking/cart                                                 | Shot planner: carry, rollout, landing spot    |
+| Shared scorecard, rounds                                                         | Auto caddy                                    |
+| Course info + tap-to-call                                                        | Green slope view                              |
+| My bag (club distances)                                                          | Later: personal launch/spin, mini-games (TBD) |
 
 ## 13. Testing and quality
 

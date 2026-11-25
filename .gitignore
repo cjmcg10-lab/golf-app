@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.expo/
+.venv/
+coverage/
+.superpowers/
+__pycache__/
+*.egg-info/
+.cache/
+apps/app/public/courses/
+test-results/
+playwright-report/
+.wrangler/
