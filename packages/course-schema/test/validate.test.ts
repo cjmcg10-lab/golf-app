@@ -44,10 +44,17 @@ describe('validateCourse', () => {
     const { course, features } = load();
     course.holes[0].yards.white = 400;
     const issues = validateCourse(course, features);
-    expect(
-      issues.filter((i) => i.level === 'warning' && i.path === 'holes[0].yards.white'),
-    ).toHaveLength(1);
+    expect(issues.filter((i) => i.level === 'warning' && i.path === 'holes[0].yards')).toHaveLength(
+      1,
+    );
     expect(issues.filter((i) => i.level === 'error')).toEqual([]);
+  });
+
+  test('forwardTeesNotWarned', () => {
+    const { course, features } = load();
+    course.teeSets.push({ id: 'red', name: 'Red', color: null, rating: null, slope: null });
+    course.holes[0].yards.red = 200; // forward tee: far shorter than measured, but white (270) is close
+    expect(validateCourse(course, features)).toEqual([]);
   });
 
   test('confidenceOutOfRange', () => {

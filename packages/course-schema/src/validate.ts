@@ -82,13 +82,23 @@ export function validateCourse(course: unknown, features: FeatureCollection): Va
       if (unknown.length) err(`${at}.featureIds`, `unknown feature ids: ${unknown.join(', ')}`);
     }
     if (isObj(h.yards)) {
+      let longest = 0;
       for (const [tee, y] of Object.entries(h.yards)) {
         if (!teeIds.has(tee)) err(`${at}.yards.${tee}`, 'unknown tee set');
         if (y === null) continue;
         if (!isNum(y) || y <= 0) err(`${at}.yards.${tee}`, 'must be > 0 or null');
-        else if (isNum(h.measuredYards) && Math.abs(y - h.measuredYards) / y > 0.1)
-          warn(`${at}.yards.${tee}`, `scorecard ${y} vs measured ${h.measuredYards} differs > 10%`);
+        else longest = Math.max(longest, y);
       }
+      // measuredYards follows the mapped (usually back) tee, so compare with the longest tee set
+      if (
+        longest > 0 &&
+        isNum(h.measuredYards) &&
+        Math.abs(longest - h.measuredYards) / longest > 0.1
+      )
+        warn(
+          `${at}.yards`,
+          `longest scorecard ${longest} vs measured ${h.measuredYards} differs > 10%`,
+        );
     } else err(`${at}.yards`, 'must be an object');
   });
   if (course.par !== parSum) err('par', `par ${String(course.par)} but holes sum to ${parSum}`);

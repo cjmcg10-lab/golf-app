@@ -1,0 +1,33 @@
+# Facts no open dataset has. Only values confirmed from the sources below.
+sources:
+  - https://southingtoncountryclub.com/contact-us/ (phones, retrieved 2026-11-25)
+  - https://southingtoncountryclub.com/wp-content/uploads/2016/02/New-Scorecard_20200309_0001.pdf (scorecard, retrieved 2026-11-25)
+contacts:
+  - { label: 'Tee times & course conditions', phone: '860-628-7032' }
+  - { label: 'Back Nine Tavern (restaurant & bar)', phone: '860-621-6383' }
+  - { label: 'Business office', phone: '860-621-2461' }
+website: https://www.southingtoncountryclub.com/
+teeSets:
+  - { id: blue, name: Blue, color: '#1f4e8c', rating: 68.6, slope: 123 }
+  - { id: white, name: White, color: '#ffffff', rating: 67.6, slope: 122 }
+  - { id: gold, name: Gold, color: '#c9a227', rating: 63.1, slope: 109 }
+  - { id: red, name: Red, color: '#b3263a', rating: 68.5, slope: 122 }
+holes:
+  1: { handicap: 7, yards: { blue: 385, white: 377, gold: 323, red: 323 } }
+  2: { handicap: 11, yards: { blue: 317, white: 306, gold: 244, red: 244 } }
+  3: { handicap: 17, yards: { blue: 151, white: 144, gold: 135, red: 130 } }
+  4: { handicap: 3, yards: { blue: 488, white: 481, gold: 385, red: 380 } }
+  5: { handicap: 5, yards: { blue: 402, white: 387, gold: 303, red: 301 } }
+  6: { handicap: 1, yards: { blue: 522, white: 508, gold: 436, red: 436 } }
+  7: { handicap: 15, yards: { blue: 206, white: 192, gold: 155, red: 153 } }
+  8: { handicap: 9, yards: { blue: 346, white: 338, gold: 260, red: 255 } }
+  9: { handicap: 13, yards: { blue: 339, white: 324, gold: 287, red: 279 } }
+  10: { handicap: 14, yards: { blue: 315, white: 300, gold: 297, red: 292 } }
+  11: { handicap: 12, yards: { blue: 325, white: 316, gold: 310, red: 303 } }
+  12: { handicap: 18, yards: { blue: 120, white: 96, gold: 93, red: 89 } }
+  13: { handicap: 6, yards: { blue: 328, white: 323, gold: 238, red: 233 } }
+  14: { handicap: 2, yards: { blue: 466, white: 453, gold: 390, red: 390 } }
+  15: { handicap: 10, yards: { blue: 211, white: 202, gold: 196, red: 186 } }
+  16: { handicap: 8, yards: { blue: 343, white: 333, gold: 248, red: 244 } }
+  17: { handicap: 16, yards: { blue: 181, white: 160, gold: 152, red: 148 } }
+  18: { handicap: 4, yards: { blue: 458, white: 445, gold: 384, red: 380 } }
