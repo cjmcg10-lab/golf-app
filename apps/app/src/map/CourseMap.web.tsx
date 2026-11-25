@@ -40,6 +40,8 @@ export function CourseMap({
 }: CourseMapProps) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<MlMap | null>(null);
+  const ready = useRef(false);
+  const pending = useRef<(() => void)[]>([]);
   const tapRef = useRef(onTapPoint);
   tapRef.current = onTapPoint;
 
@@ -137,13 +139,16 @@ export function CourseMap({
         layout: { 'text-field': ['get', 'label'], 'text-size': 12, 'text-offset': [0, -1.3] },
         paint: { 'text-color': '#fff', 'text-halo-color': '#000', 'text-halo-width': 1.5 },
       });
-      m.fire('golf:ready');
+      ready.current = true;
+      pending.current.splice(0).forEach((f) => f());
     });
     m.on('click', (e) => tapRef.current?.([e.lngLat.lng, e.lngLat.lat]));
     map.current = m;
     return () => {
       m.remove();
       map.current = null;
+      ready.current = false;
+      pending.current = [];
     };
   }, [course, features]);
 
@@ -183,8 +188,8 @@ export function CourseMap({
         if (cam) m.jumpTo({ ...cam, bearing: holeBearing(hole) });
       }
     };
-    if (m.isStyleLoaded() && m.getSource('marks')) apply();
-    else m.once('golf:ready', apply);
+    if (ready.current) apply();
+    else pending.current.push(apply);
   }, [course, holeNumber, userLocation, target]);
 
   return <div ref={el} data-testid="course-map" style={{ position: 'absolute', inset: 0 }} />;

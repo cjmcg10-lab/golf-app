@@ -114,6 +114,10 @@ importers:
       '@golf/course-schema':
         specifier: workspace:*
         version: link:../course-schema
+    devDependencies:
+      '@types/geojson':
+        specifier: ^7946.0.16
+        version: 7946.0.16
 
 packages:
 
