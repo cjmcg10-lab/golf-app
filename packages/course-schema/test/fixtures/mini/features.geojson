@@ -1,0 +1,21 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "id": "g1", "kind": "green", "hole": 1, "source": "osm", "confidence": 1 },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-72.8662, 41.5659],
+            [-72.8658, 41.5659],
+            [-72.8658, 41.5661],
+            [-72.8662, 41.5661],
+            [-72.8662, 41.5659]
+          ]
+        ]
+      }
+    }
+  ]
+}

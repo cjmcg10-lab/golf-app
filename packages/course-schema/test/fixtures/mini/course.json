@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "id": "mini",
+  "version": "1",
+  "name": "Mini Golf Club",
+  "address": "1 Test Rd",
+  "location": [-72.866, 41.5675],
+  "bounds": [-72.87, 41.565, -72.86, 41.57],
+  "par": 7,
+  "website": null,
+  "contacts": [{ "label": "Pro shop", "phone": "+18606287032" }],
+  "teeSets": [
+    { "id": "white", "name": "White", "color": "#ffffff", "rating": null, "slope": null }
+  ],
+  "holes": [
+    {
+      "number": 1,
+      "par": 4,
+      "handicap": 3,
+      "playLine": [
+        [-72.869, 41.566],
+        [-72.866, 41.566]
+      ],
+      "measuredYards": 273,
+      "yards": { "white": 270 },
+      "pin": [-72.866, 41.566],
+      "green": {
+        "front": [-72.8662, 41.566],
+        "center": [-72.866, 41.566],
+        "back": [-72.8658, 41.566]
+      },
+      "featureIds": ["g1"]
+    },
+    {
+      "number": 2,
+      "par": 3,
+      "handicap": null,
+      "playLine": [
+        [-72.865, 41.567],
+        [-72.8635, 41.567]
+      ],
+      "measuredYards": 137,
+      "yards": { "white": null },
+      "pin": [-72.8635, 41.567],
+      "green": {
+        "front": [-72.8637, 41.567],
+        "center": [-72.8635, 41.567],
+        "back": [-72.8633, 41.567]
+      },
+      "featureIds": []
+    }
+  ],
+  "imagery": null,
+  "elevation": null,
+  "attribution": ["© OpenStreetMap contributors"]
+}
