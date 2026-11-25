@@ -65,7 +65,8 @@ export function CourseMap({
           ? {
               naip: {
                 type: 'raster',
-                tiles: [course.imagery.tiles],
+                // version in the URL so a rebuilt course isn't served stale from the HTTP cache
+                tiles: [`${course.imagery.tiles}?v=${course.version}`],
                 tileSize: 256,
                 // only request tiles that exist (others would 404 into the SPA fallback)
                 bounds: course.bounds,
@@ -179,7 +180,7 @@ export function CourseMap({
     };
     if (ready.current) apply();
     else pending.current.push(apply);
-  }, [course, holeNumber, userLocation, target]);
+  }, [course, features, holeNumber, userLocation, target]);
 
   // camera fits the hole only when the hole changes, so GPS updates don't undo the user's pan/zoom
   useEffect(() => {
@@ -199,7 +200,7 @@ export function CourseMap({
     };
     if (ready.current) fit();
     else pending.current.push(fit);
-  }, [course, holeNumber]);
+  }, [course, features, holeNumber]);
 
   return <div ref={el} data-testid="course-map" style={{ position: 'absolute', inset: 0 }} />;
 }

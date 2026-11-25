@@ -4,6 +4,7 @@ from pathlib import Path
 
 import yaml
 
+from .geo import geodesic_yards
 from .osm import normalize_phone
 
 
@@ -48,6 +49,10 @@ def apply_manual(course: dict, manual: dict) -> dict:
             h["par"] = m["par"]
         if "yards" in m:
             h["yards"] = dict(m["yards"])
+        if "tee" in m:
+            # back tee located from imagery when the OSM hole line starts at the wrong tee
+            h["playLine"] = [list(m["tee"]), *h["playLine"][1:]]
+            h["measuredYards"] = round(geodesic_yards(h["playLine"]))
         holes.append(h)
     out["holes"] = holes
     return out

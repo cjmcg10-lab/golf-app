@@ -1,6 +1,6 @@
 # Course build config for tools/course-builder (python -m coursebuilder.build southington-cc)
 name: Southington Country Club
-version: 1
+version: 2
 osm_boundary_way: 43440837
 # OSM API bbox (w, s, e, n) that contains the whole course boundary
 seed_bbox: [-72.8760, 41.5640, -72.8570, 41.5715]

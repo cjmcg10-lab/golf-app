@@ -7,8 +7,14 @@ overlaid (zoom 16 overview, zoom 17 sections, zoom 18 detail of the holes 10/14/
 outlines line up with the imagery. The gap was **trees** (none mapped). Rough was not traced:
 everything inside the boundary that is not another feature is treated as rough.
 
-Not changed: hole 12 measures 93 yds and hole 15 253 yds from the OSM hole lines — the
-scorecard (manual.yaml) is the authority for yardages; see the validation warnings on the review page.
+**Tee fixes (second pass, zoom 19):** the OSM hole lines for 12 and 15 started at the wrong tee
+(93 vs 120 and 253 vs 211 yds on the scorecard). `manual.yaml` now sets `tee:` for both:
+- Hole 12: a rectangular tee box with markers just south-west of the mapped (forward) oval tee,
+  unmapped in OSM → traced as `ai-tee-12-back`. 112 yds to the green centre, 120 to the back
+  (Blue 120).
+- Hole 15: the OSM line started at the far box (osm way 1208876141, 255 yds, matches no tee set).
+  The line now starts at osm way 1208876140 — 194 to the centre, 205 to the back (Blue 211,
+  Gold 196).
 
 | id | kind | confidence | what / why |
 |---|---|---|---|
@@ -20,4 +26,5 @@ scorecard (manual.yaml) is the authority for yardages; see the validation warnin
 | ai-trees-11-north | trees | 0.55 | Tree row south of the 11th fairway. |
 | ai-trees-13-15-scatter | trees | 0.5 | Scattered trees between the 13th green and the 15th green. |
 | ai-trees-16-18-west | trees | 0.5 | Tree line between the 16th tee/path and the 18th fairway (west of the 16th tee). |
+| ai-tee-12-back | tee | 0.8 | Back tee of hole 12 (rectangular box with tee markers), see Tee fixes above. |
 | ai-trees-16-18-east | trees | 0.5 | Same tree line, east of the 16th tee (split so the tee is not covered). |

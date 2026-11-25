@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { downloadForOffline, isDownloaded } from './offline';
+import { downloadForOffline, isDownloaded, pruneAppShell } from './offline';
 
 class FakeCache {
   store = new Map<string, Response>();
@@ -8,6 +8,12 @@ class FakeCache {
   }
   async match(url: string) {
     return this.store.get(url);
+  }
+  async keys() {
+    return [...this.store.keys()].map((k) => new Request(`http://x${k}`));
+  }
+  async delete(req: Request | string) {
+    return this.store.delete(typeof req === 'string' ? req : new URL(req.url).pathname);
   }
 }
 class FakeCaches {
@@ -119,5 +125,16 @@ describe('offline', () => {
     const atFailure = calls;
     for (let i = 0; i < 20; i++) await tick();
     expect(calls).toBe(atFailure);
+  });
+
+  test('pruneAppShellDropsOldBundles', async () => {
+    const cs = new FakeCaches();
+    const shell = await cs.open('app-shell');
+    for (const k of ['/', '/_expo/static/js/web/old-1.js', '/_expo/static/js/web/new-2.js'])
+      await shell.put(k, new Response('x'));
+    const f = (async () =>
+      new Response(JSON.stringify(['/', '/_expo/static/js/web/new-2.js']))) as typeof fetch;
+    await pruneAppShell({ fetcher: f, caches: cs as unknown as CacheStorage });
+    expect([...shell.store.keys()].sort()).toEqual(['/', '/_expo/static/js/web/new-2.js']);
   });
 });

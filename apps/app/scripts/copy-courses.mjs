@@ -5,7 +5,18 @@ import { join, resolve } from 'node:path';
 const root = resolve(import.meta.dirname, '../../..');
 const src = join(root, 'courses');
 const dst = resolve(import.meta.dirname, '../public/courses');
-const SKIP = new Set(['.cache', 'build.yaml', 'manual.yaml', 'ai.geojson', 'AI_NOTES.md']);
+// builder inputs and builder-only outputs stay out of the public site (elevation is unused until
+// the physics milestone ships it)
+const SKIP = new Set([
+  '.cache',
+  'build.yaml',
+  'manual.yaml',
+  'ai.geojson',
+  'AI_NOTES.md',
+  'review.html',
+  'greens',
+  'elevation-course.bin',
+]);
 
 rmSync(dst, { recursive: true, force: true });
 mkdirSync(dst, { recursive: true });

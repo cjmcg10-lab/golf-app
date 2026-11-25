@@ -24,10 +24,12 @@ holes:
   9: { handicap: 13, yards: { blue: 339, white: 324, gold: 287, red: 279 } }
   10: { handicap: 14, yards: { blue: 315, white: 300, gold: 297, red: 292 } }
   11: { handicap: 12, yards: { blue: 325, white: 316, gold: 310, red: 303 } }
-  12: { handicap: 18, yards: { blue: 120, white: 96, gold: 93, red: 89 } }
+  # tee: back tee box located on NAIP 2023 imagery (see AI_NOTES.md) — the OSM hole line starts
+  # at a forward tee (12) or at a box that matches no scorecard tee set (15)
+  12: { handicap: 18, yards: { blue: 120, white: 96, gold: 93, red: 89 }, tee: [-72.8608294, 41.5692264] }
   13: { handicap: 6, yards: { blue: 328, white: 323, gold: 238, red: 233 } }
   14: { handicap: 2, yards: { blue: 466, white: 453, gold: 390, red: 390 } }
-  15: { handicap: 10, yards: { blue: 211, white: 202, gold: 196, red: 186 } }
+  15: { handicap: 10, yards: { blue: 211, white: 202, gold: 196, red: 186 }, tee: [-72.863475, 41.567036] }
   16: { handicap: 8, yards: { blue: 343, white: 333, gold: 248, red: 244 } }
   17: { handicap: 16, yards: { blue: 181, white: 160, gold: 152, red: 148 } }
   18: { handicap: 4, yards: { blue: 458, white: 445, gold: 384, red: 380 } }

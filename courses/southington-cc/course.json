@@ -1,7 +1,7 @@
 {
  "schemaVersion": 1,
  "id": "southington-cc",
- "version": "1",
+ "version": "2",
  "name": "Southington Country Club",
  "address": "150 Savage Street, Plantsville, CT 06479",
  "location": [
@@ -666,15 +666,15 @@
    "handicap": 18,
    "playLine": [
     [
-     -72.860679,
-     41.5693307
+     -72.8608294,
+     41.5692264
     ],
     [
      -72.8599412,
      41.569864
     ]
    ],
-   "measuredYards": 93,
+   "measuredYards": 112,
    "yards": {
     "blue": 120,
     "white": 96,
@@ -700,6 +700,7 @@
     ]
    },
    "featureIds": [
+    "ai-tee-12-back",
     "osm-way-1208837985",
     "osm-way-1208847516",
     "osm-way-1208847517",
@@ -830,15 +831,15 @@
    "handicap": 10,
    "playLine": [
     [
-     -72.8640237,
-     41.5667841
+     -72.863475,
+     41.567036
     ],
     [
      -72.8615984,
      41.5677903
     ]
    ],
-   "measuredYards": 253,
+   "measuredYards": 194,
    "yards": {
     "blue": 211,
     "white": 202,

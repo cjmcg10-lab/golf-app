@@ -79,3 +79,17 @@ export async function downloadForOffline(
   }
   return { files: urls.length, bytes };
 }
+
+/** Drops app-shell entries from earlier deploys (hashed bundles) that the current shell.json no longer lists. */
+export async function pruneAppShell(o: Opts = {}): Promise<void> {
+  const { fetcher, caches } = env(o);
+  if (!caches || !(await caches.has('app-shell'))) return;
+  const res = await fetcher('/shell.json');
+  const listed: unknown = res.ok ? await res.json().catch(() => null) : null;
+  if (!Array.isArray(listed)) return;
+  const keep = new Set(listed as string[]);
+  const cache = await caches.open('app-shell');
+  for (const req of await cache.keys()) {
+    if (!keep.has(new URL(req.url).pathname)) await cache.delete(req);
+  }
+}

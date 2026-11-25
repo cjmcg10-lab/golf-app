@@ -56,3 +56,19 @@ def test_manual_hole_data():
     out = apply_manual(course, {"holes": {1: {"handicap": 7, "yards": {"white": 300}}}})
     assert out["holes"][0]["handicap"] == 7
     assert out["holes"][0]["yards"] == {"white": 300}
+
+
+def test_pin_outside_green_not_borrowed():
+    # a green with no pin of its own must not take a neighbouring green's pin 20 m away
+    from shapely.geometry import Polygon
+
+    from coursebuilder.derive import _pin
+    from coursebuilder.geo import Local
+
+    green = Polygon(
+        [(-72.8600, 41.5700), (-72.8599, 41.5700), (-72.8599, 41.5701), (-72.8600, 41.5701)]
+    )
+    loc = Local(-72.86, 41.57)
+    neighbour_pin = (-72.8599 + 0.00024, 41.57005)  # ≈ 20 m east of the green's edge
+    assert _pin([neighbour_pin], green, loc) is None
+    assert _pin([(-72.85995, 41.57005)], green, loc) == [-72.85995, 41.57005]

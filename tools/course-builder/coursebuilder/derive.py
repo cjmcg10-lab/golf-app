@@ -5,7 +5,7 @@ from shapely.geometry import LineString, Point, shape
 from .geo import Local, geodesic_yards
 from .osm import _index, hole_ways
 
-PIN_MAX_M = 30.0
+PIN_MAX_M = 5.0  # pins sit on their green; more slack would borrow a neighbouring green's pin
 
 
 def derive_holes(osm: dict, features: dict) -> list[dict]:
