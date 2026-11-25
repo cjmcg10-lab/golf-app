@@ -53,7 +53,12 @@ function HoleBody({
   const [mode, setMode] = useState<StartMode>('tee');
   const [ball, setBall] = useState<LngLat | null>(null);
   const [target, setTarget] = useState<LngLat | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusyState] = useState(false);
+  const busyRef = useRef(false); // read synchronously by handlers that fire before a re-render
+  const setBusy = (b: boolean) => {
+    busyRef.current = b;
+    setBusyState(b);
+  };
   const [result, setResult] = useState<string | null>(null);
   const loc = useLocation();
   const weather = useWeather(course.location);
@@ -71,7 +76,7 @@ function HoleBody({
     loc.fix && distanceYards(loc.fix.at, hole.green.center) <= OFF_COURSE_YARDS ? loc.fix.at : null;
   const tee = hole.playLine[0]!;
   const start: LngLat =
-    mode === 'gps' && gps ? gps : (mode === 'ball' || mode === 'pick') && ball ? ball : tee;
+    mode !== 'tee' && ball ? ball : tee; // GPS is captured once when chosen, so fixes don't jitter
   const aim = target ?? hole.pin ?? hole.green.center;
   const sKey = start.join();
   const aKey = aim.join();
@@ -89,7 +94,7 @@ function HoleBody({
   }, [ready, busy, flat, sKey, aKey, advice, holeNumber]);
 
   const onTap = (p: LngLat) => {
-    if (busy) return;
+    if (busyRef.current) return;
     if (mode === 'pick') {
       setBall(p);
       setMode('ball');
@@ -97,11 +102,15 @@ function HoleBody({
   };
 
   const hit = async () => {
-    if (!advice || !scene.current) return;
+    if (!advice || !scene.current || busyRef.current) return;
     setBusy(true);
     setResult(null);
     const from = start;
     const rest = await scene.current.hit(advice);
+    if (rest === undefined) {
+      setBusy(false); // interrupted
+      return;
+    }
     const carry = Math.round(carryYards(advice.flight));
     if (rest) {
       const total = Math.round(scene.current.measure(from, rest)?.yards ?? carry);
@@ -118,15 +127,16 @@ function HoleBody({
   };
 
   const driveNext = async () => {
-    if (!next || !scene.current) return;
+    if (!next || !scene.current || busyRef.current) return;
     setBusy(true);
     setResult(null);
-    await scene.current.driveTo(next.playLine[0]!, next.pin ?? next.green.center);
+    const arrived = await scene.current.driveTo(next.playLine[0]!, next.pin ?? next.green.center);
     setBusy(false);
+    if (!arrived) return;
     router.setParams({ n: String(next.number) });
   };
 
-  const go = (k: number) => router.setParams({ n: String(k) });
+  const go = (k: number) => !busyRef.current && router.setParams({ n: String(k) });
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -183,6 +193,7 @@ function HoleBody({
           label={flat ? 'Show 3D course' : 'Show 2D map'}
           glyph={flat ? '3D' : '2D'}
           onPress={() => {
+            if (busyRef.current) return;
             setFlat((f) => !f);
             setReady(false);
           }}
@@ -192,19 +203,23 @@ function HoleBody({
           glyph="GPS"
           active={mode === 'gps' && !!gps}
           warn={!gps}
-          onPress={() => gps && setMode('gps')}
+          onPress={() => {
+            if (busyRef.current || !gps) return;
+            setBall(gps);
+            setMode('gps');
+          }}
         />
         <FloatButton
           label="Play from the tee"
           glyph="TEE"
           active={mode === 'tee'}
-          onPress={() => setMode('tee')}
+          onPress={() => !busyRef.current && setMode('tee')}
         />
         <FloatButton
           label="Pick where the ball is"
           glyph="⌖"
           active={mode === 'pick'}
-          onPress={() => setMode('pick')}
+          onPress={() => !busyRef.current && setMode('pick')}
         />
       </View>
 
@@ -255,6 +270,9 @@ function HoleBody({
                 </View>
               )}
               <Text style={{ color: colors.muted, fontSize: 11 }}>{weatherLine(weather)}</Text>
+              <Text style={{ color: colors.muted, fontSize: 10 }}>
+                Terrain: USGS 3DEP · Map data © OpenStreetMap contributors
+              </Text>
               {result && <Text style={{ color: colors.accent, fontWeight: '700' }}>{result}</Text>}
               {next && (
                 <Pressable

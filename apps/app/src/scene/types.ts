@@ -13,10 +13,11 @@ export interface CourseSceneHandle {
   overview(): void;
   focusHole(n: number): void;
   setShot(s: ShotSetup): void;
-  /** Swing, fly and roll; resolves with where the ball stopped (null = in the water). */
-  hit(a: Advice): Promise<LngLat | null>;
+  /** Swing, fly and roll; resolves with where the ball stopped (null = in the water,
+   *  undefined = interrupted). */
+  hit(a: Advice): Promise<LngLat | null | undefined>;
   /** Golfer climbs in, the cart drives the cart paths, golfer gets out at `to` facing `face`. */
-  driveTo(to: LngLat, face: LngLat): Promise<void>;
+  driveTo(to: LngLat, face: LngLat): Promise<boolean>; // false = interrupted
   /** Yards, bearing and height change (m) from a to b on the terrain; null until loaded. */
   measure(a: LngLat, b: LngLat): { yards: number; bearing: number; dz: number } | null;
 }

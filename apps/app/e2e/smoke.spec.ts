@@ -93,3 +93,14 @@ test('holeShows3dCaddy', async ({ page }) => {
   await expect(page.getByLabel('Caddy club')).toBeVisible({ timeout: 45_000 });
   await expect(page.getByRole('button', { name: 'Hit' })).toBeEnabled();
 });
+
+test('shotCompletesEvenIfViewToggled', async ({ page }) => {
+  await page.goto('/hole/12');
+  const hitBtn = page.getByRole('button', { name: 'Hit' });
+  await expect(hitBtn).toBeEnabled({ timeout: 45_000 });
+  await hitBtn.click();
+  await page.getByRole('button', { name: 'Show 2D map' }).click(); // ignored mid-shot
+  await expect(page.getByText(/· carry \d+ ·/)).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByTestId('course-3d')).toBeVisible(); // still 3D: the toggle waited
+  await expect(page.getByRole('button', { name: /Drive the cart|Drive to hole/ })).toBeEnabled();
+});

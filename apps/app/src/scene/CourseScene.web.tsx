@@ -50,6 +50,8 @@ interface Rig {
   preview: THREE.Line;
   marker: THREE.Group;
   ticks: Tick[];
+  /** Settles any shot or drive still in progress (the promise resolves as cancelled). */
+  cancels: (() => void)[];
   wake(): void;
 }
 
@@ -156,6 +158,12 @@ export const CourseScene = forwardRef<CourseSceneHandle, CourseSceneProps>(funct
       const dt = Math.min((now - last) / 1000, 0.1);
       last = now;
       const r = rig.current;
+      // hidden screens (still mounted under the stack) skip work; the visible one owns the world
+      if (!host.clientWidth) return;
+      if (r && r.world.group.parent !== scene) {
+        scene.add(r.world.group);
+        dirty = true;
+      }
       if (r?.ticks.length) {
         r.ticks = r.ticks.filter((t) => !t(dt));
         dirty = true;
@@ -229,6 +237,7 @@ export const CourseScene = forwardRef<CourseSceneHandle, CourseSceneProps>(funct
           preview,
           marker,
           ticks: [],
+          cancels: [],
           wake,
         };
         for (const f of queued.current.splice(0)) f(rig.current);
@@ -239,6 +248,7 @@ export const CourseScene = forwardRef<CourseSceneHandle, CourseSceneProps>(funct
 
     return () => {
       disposed = true;
+      if (rig.current) stopAll(rig.current);
       cancelAnimationFrame(raf);
       ro.disconnect();
       controls.dispose();
@@ -265,9 +275,31 @@ export const CourseScene = forwardRef<CourseSceneHandle, CourseSceneProps>(funct
           if (h) fly(r, behind(r.world, h.playLine[0]!, h.green.center, 1), 1.2);
         }),
       setShot: (s) => run((r) => setShot(r, s)),
-      hit: (a) => new Promise((done) => run((r) => hit(r, a, done))),
+      hit: (a) =>
+        new Promise((done) =>
+          run((r) => {
+            stopAll(r);
+            const cancel = () => done(undefined);
+            r.cancels.push(cancel);
+            hit(r, a, (rest) => {
+              r.cancels = r.cancels.filter((c) => c !== cancel);
+              done(rest);
+            });
+          }),
+        ),
       measure: (a, b) => (rig.current ? measure(rig.current.world, a, b) : null),
-      driveTo: (to, face) => new Promise((done) => run((r) => drive(r, to, face, done))),
+      driveTo: (to, face) =>
+        new Promise((done) =>
+          run((r) => {
+            stopAll(r);
+            const cancel = () => done(false);
+            r.cancels.push(cancel);
+            drive(r, to, face, () => {
+              r.cancels = r.cancels.filter((c) => c !== cancel);
+              done(true);
+            });
+          }),
+        ),
     }),
     [course],
   );
@@ -383,7 +415,7 @@ function setCart(r: Rig, p: EN, heading: number) {
 }
 
 function setShot(r: Rig, s: ShotSetup) {
-  r.ticks = [];
+  stopAll(r);
   placeGolfer(r, s.start, s.aim);
   parkCart(r, s.start, s.aim);
   clearLine(r.trail);
@@ -410,10 +442,12 @@ function hit(r: Rig, a: Advice, done: (rest: LngLat | null) => void) {
   const start = w.toLngLat(r.ball.position);
   const pts = flightPoints(r, start, a);
   const dir = dirOf(a.aimDeg);
+  const [lx, ly] = a.flight.pts.at(-1)!;
+  const [px, py] = a.flight.pts.at(-2) ?? [0, 0];
+  const rollDir = new THREE.Vector3(lx - px, 0, -(ly - py)).normalize(); // heading at landing
   const g = r.golfer;
   g.showClub(true);
   r.preview.visible = false;
-  r.ticks = [];
   const side = new THREE.Vector3(-dir.z, 0, dir.x);
   const g0 = g.root.position.clone();
   fly(
@@ -454,7 +488,7 @@ function hit(r: Rig, a: Advice, done: (rest: LngLat | null) => void) {
         wet = surface === 'water';
         const roll = wet ? 0 : rollYards(a.flight, surface) * YARD;
         rollFrom = land;
-        rollTo = land.clone().addScaledVector(dir, roll);
+        rollTo = land.clone().addScaledVector(rollDir, roll);
         phase = 'roll';
         rollT = 0;
       }
@@ -554,6 +588,11 @@ function practiceSwing(r: Rig) {
     });
     return t > 2.8;
   });
+}
+
+function stopAll(r: Rig) {
+  r.ticks = [];
+  for (const c of r.cancels.splice(0)) c();
 }
 
 function clearLine(l: THREE.Line) {
