@@ -33,7 +33,7 @@
     "start": "expo start",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "build": "node scripts/copy-courses.mjs && expo export -p web",
+    "build": "node scripts/copy-courses.mjs && expo export -p web && node scripts/shell-manifest.mjs",
     "e2e": "playwright test"
   },
   "private": true

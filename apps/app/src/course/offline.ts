@@ -38,7 +38,13 @@ export async function downloadForOffline(
   const idx = await fetcher(`${base}/tiles/index.json`);
   if (!idx.ok) throw new Error(`Could not get the tile list (${idx.status})`);
   const tiles = (await idx.json()) as string[];
+  // App shell (index.html, every JS chunk, map worker) listed at build time by scripts/shell-manifest.mjs
+  const sh = await fetcher('/shell.json');
+  // (missing in dev, where the SPA fallback answers with HTML)
+  const listed: unknown = sh.ok ? await sh.json().catch(() => []) : [];
+  const shell = Array.isArray(listed) ? (listed as string[]) : [];
   const urls = [
+    ...shell,
     `${base}/course.json`,
     `${base}/features.geojson`,
     ...tiles.map((t) => `${base}/tiles/${t}`),
@@ -47,20 +53,23 @@ export async function downloadForOffline(
   const cache = await caches.open(name);
   let done = 0;
   let bytes = 0;
+  let failed = false;
   const queue = [...urls];
   const worker = async () => {
-    for (let url = queue.shift(); url; url = queue.shift()) {
+    for (let url = queue.shift(); url && !failed; url = queue.shift()) {
       const res = await fetcher(url);
+      if (failed) return;
       if (!res.ok) throw new Error(`Download failed for ${url} (${res.status})`);
       const body = await res.clone().arrayBuffer();
       bytes += body.byteLength;
       await cache.put(url, res);
-      o.onProgress?.(++done, urls.length);
+      if (!failed) o.onProgress?.(++done, urls.length);
     }
   };
   try {
     await Promise.all(Array.from({ length: 6 }, worker));
   } catch (e) {
+    failed = true;
     await caches.delete(name);
     throw e;
   }

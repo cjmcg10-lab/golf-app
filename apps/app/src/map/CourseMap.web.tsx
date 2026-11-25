@@ -152,7 +152,7 @@ export function CourseMap({
     };
   }, [course, features]);
 
-  // camera + overlays follow props
+  // overlays follow props
   useEffect(() => {
     const m = map.current;
     if (!m) return;
@@ -176,21 +176,30 @@ export function CourseMap({
         type: 'FeatureCollection',
         features: marks,
       });
-      if (hole) {
-        const pts = [...hole.playLine, hole.green.back];
-        const lons = pts.map((p) => p[0]);
-        const lats = pts.map((p) => p[1]);
-        const b: LngLatBoundsLike = [
-          [Math.min(...lons), Math.min(...lats)],
-          [Math.max(...lons), Math.max(...lats)],
-        ];
-        const cam = m.cameraForBounds(b, { padding: 40, bearing: holeBearing(hole) });
-        if (cam) m.jumpTo({ ...cam, bearing: holeBearing(hole) });
-      }
     };
     if (ready.current) apply();
     else pending.current.push(apply);
   }, [course, holeNumber, userLocation, target]);
+
+  // camera fits the hole only when the hole changes, so GPS updates don't undo the user's pan/zoom
+  useEffect(() => {
+    const m = map.current;
+    const hole = holeNumber ? course.holes.find((h) => h.number === holeNumber) : undefined;
+    if (!m || !hole) return;
+    const fit = () => {
+      const pts = [...hole.playLine, hole.green.back];
+      const lons = pts.map((p) => p[0]);
+      const lats = pts.map((p) => p[1]);
+      const b: LngLatBoundsLike = [
+        [Math.min(...lons), Math.min(...lats)],
+        [Math.max(...lons), Math.max(...lats)],
+      ];
+      const cam = m.cameraForBounds(b, { padding: 40, bearing: holeBearing(hole) });
+      if (cam) m.jumpTo({ ...cam, bearing: holeBearing(hole) });
+    };
+    if (ready.current) fit();
+    else pending.current.push(fit);
+  }, [course, holeNumber]);
 
   return <div ref={el} data-testid="course-map" style={{ position: 'absolute', inset: 0 }} />;
 }

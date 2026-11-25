@@ -84,4 +84,40 @@ describe('offline', () => {
       await isDownloaded('mini', '1', { fetcher, caches: cs as unknown as CacheStorage }),
     ).toBe(false);
   });
+
+  test('appShellCachedWithDownload', async () => {
+    const cs = new FakeCaches();
+    const shell = ['/', '/_expo/static/js/web/info-abc.js', '/maplibre-gl-worker.mjs'];
+    const f = (async (url: string) =>
+      url === '/shell.json' ? new Response(JSON.stringify(shell)) : fetcher(url)) as typeof fetch;
+    const r = await downloadForOffline('mini', '1', {
+      fetcher: f,
+      caches: cs as unknown as CacheStorage,
+    });
+    const keys = [...cs.caches.get('course-mini-1')!.store.keys()];
+    for (const k of shell) expect(keys).toContain(k);
+    expect(r.files).toBe(8);
+  });
+
+  test('noProgressAfterFailure', async () => {
+    const cs = new FakeCaches();
+    const many = Array.from({ length: 30 }, (_, i) => `15/${i}/0.jpg`);
+    const tick = () => new Promise((r) => setTimeout(r, 1));
+    const slow = (async (url: string) => {
+      if (url.endsWith('index.json')) return new Response(JSON.stringify(many));
+      await tick();
+      return url.includes('15/0/0') ? new Response('', { status: 500 }) : new Response('x');
+    }) as typeof fetch;
+    let calls = 0;
+    await expect(
+      downloadForOffline('mini', '1', {
+        fetcher: slow,
+        caches: cs as unknown as CacheStorage,
+        onProgress: () => calls++,
+      }),
+    ).rejects.toThrow();
+    const atFailure = calls;
+    for (let i = 0; i < 20; i++) await tick();
+    expect(calls).toBe(atFailure);
+  });
 });

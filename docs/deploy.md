@@ -11,8 +11,9 @@ pnpm install && pnpm --filter app build
 
 ## Option A — GitHub Actions (set up)
 
-`.github/workflows/deploy.yml` builds and deploys on every push to `main` (and the current
-feature branch). It needs two repository secrets: `CLOUDFLARE_API_TOKEN` (Pages: Edit) and
+`.github/workflows/deploy.yml` builds and deploys. Pushes to `main` and manual runs (Actions → Deploy web app →
+Run workflow) update production; pushes to other branches get a preview URL
+(`<branch>.southington-golf.pages.dev`). It needs two repository secrets: `CLOUDFLARE_API_TOKEN` (Pages: Edit) and
 `CLOUDFLARE_ACCOUNT_ID`. Project: `southington-golf` → https://southington-golf.pages.dev
 
 ## Option A2 — direct upload with Wrangler from your machine

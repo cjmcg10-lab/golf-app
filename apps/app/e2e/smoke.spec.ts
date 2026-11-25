@@ -63,3 +63,26 @@ test('offlineAfterDownload', async ({ page, context }) => {
   await expect(page.getByText(/^Par 4 · 385 yds/)).toBeVisible();
   await expect(page.locator('canvas')).toHaveCount(1);
 });
+
+async function downloadCourse(page: import('@playwright/test').Page) {
+  await page.goto('/info');
+  await page
+    .waitForFunction(() => navigator.serviceWorker?.controller != null, null, { timeout: 15_000 })
+    .catch(() => page.reload());
+  await page.getByRole('button', { name: 'Download course for offline' }).click();
+  await expect(page.getByText('✓ Course saved for offline use')).toBeVisible({ timeout: 45_000 });
+}
+
+test('offlineRouteNeverVisited', async ({ page, context }) => {
+  await downloadCourse(page);
+  await context.setOffline(true);
+  await page.goto('/hole/3');
+  await expect(page.getByText('Hole 3', { exact: true })).toBeVisible();
+});
+
+test('stalledNetworkUsesDownloadedCourse', async ({ page, context }) => {
+  await downloadCourse(page);
+  await context.route('**/courses/southington-cc/course.json', () => {}); // never answers
+  await page.goto('/hole/1');
+  await expect(page.getByText('Hole 1', { exact: true })).toBeVisible({ timeout: 8_000 });
+});
