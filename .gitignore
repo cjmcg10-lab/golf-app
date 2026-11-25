@@ -11,3 +11,4 @@ apps/app/public/courses/
 test-results/
 playwright-report/
 .wrangler/
+public/maplibre-gl-worker.mjs
