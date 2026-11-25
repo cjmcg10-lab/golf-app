@@ -89,7 +89,8 @@ test('offlineAfterDownload', async ({ page, context }) => {
   await page.reload();
   await expect(page.getByText('Hole 1', { exact: true })).toBeVisible();
   await expect(page.getByText(/^Par 4 · 385 yds/)).toBeVisible();
-  await expect(page.getByTestId('course-3d').locator('canvas')).toHaveCount(1);
+  // the 3D assets (elevation, ground fields) came from the download: stats need them
+  await expect(page.getByLabel('Plays like')).toHaveText(/^\d+ yds$/, { timeout: 45_000 });
 });
 
 async function downloadCourse(page: import('@playwright/test').Page) {
@@ -122,6 +123,29 @@ test('tapSetsLandingSpot', async ({ page }) => {
   await page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.35);
   await expect(page.getByText('TO TARGET')).toBeVisible();
   await page.getByRole('button', { name: 'Aim at pin' }).click();
+  await expect(page.getByText('TO PIN')).toBeVisible();
+});
+
+test('offCourseGpsStillShowsStatsFromTee', async ({ browser }) => {
+  const ctx = await browser.newContext({
+    geolocation: { longitude: -72.5, latitude: 41.8, accuracy: 5 }, // ~20 miles away
+    permissions: ['geolocation'],
+  });
+  const page = await ctx.newPage();
+  await page.goto('/hole/1');
+  await expect(page.getByText('You’re not on the course')).toBeVisible();
+  await expect(page.getByLabel('Plays like')).toHaveText(/^\d+ yds$/, { timeout: 45_000 });
+  await ctx.close();
+});
+
+test('nextHoleStartsFresh', async ({ page }) => {
+  await page.goto('/hole/1');
+  await expect(page.getByText('TO PIN')).toBeVisible({ timeout: 45_000 });
+  const box = (await page.getByTestId('course-3d').boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.35);
+  await expect(page.getByText('TO TARGET')).toBeVisible();
+  await page.getByRole('button', { name: 'Next hole' }).click();
+  await expect(page.getByText('Hole 2', { exact: true })).toBeVisible();
   await expect(page.getByText('TO PIN')).toBeVisible();
 });
 

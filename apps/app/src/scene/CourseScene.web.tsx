@@ -81,6 +81,13 @@ export const CourseScene = forwardRef<CourseSceneHandle, CourseSceneProps>(funct
   const queued = useRef<((r: Rig) => void)[]>([]);
   const cb = useRef({ onTapGround, onReady, onError });
   cb.current = { onTapGround, onReady, onError };
+  // changing focusTop re-fits the view; it must not rebuild the scene
+  const focus = useRef(focusTop);
+  const refit = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    focus.current = focusTop;
+    refit.current?.();
+  }, [focusTop]);
 
   useEffect(() => {
     const host = el.current;
@@ -123,7 +130,7 @@ export const CourseScene = forwardRef<CourseSceneHandle, CourseSceneProps>(funct
       if (!w || !h) return;
       renderer.setSize(w, h);
       // keep the point of interest clear of the panels: the look-at point sits focusTop down
-      const k = Math.max(0, h * (1 - 2 * focusTop));
+      const k = Math.max(0, h * (1 - 2 * focus.current));
       persp.aspect = w / h;
       persp.setViewOffset(w, h + k, 0, k, w, h);
       persp.updateProjectionMatrix();
@@ -133,6 +140,7 @@ export const CourseScene = forwardRef<CourseSceneHandle, CourseSceneProps>(funct
       ortho.updateProjectionMatrix();
       wake();
     };
+    refit.current = resize;
     const ro = new ResizeObserver(resize);
     ro.observe(host);
     resize();
@@ -284,10 +292,11 @@ export const CourseScene = forwardRef<CourseSceneHandle, CourseSceneProps>(funct
       }
       sky.dispose();
       rig.current = null;
+      refit.current = null;
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [course, features, focusTop]);
+  }, [course, features]);
 
   const run = (f: (r: Rig) => void) => {
     if (rig.current) f(rig.current);

@@ -88,6 +88,7 @@ function CourseBody({ course, features }: { course: Course; features: FeatureCol
   };
   const scene = useRef<CourseSceneHandle>(null);
   const [ready, setReady] = useState(false);
+  const [flat, setFlat] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const weather = useWeather(course.location);
   const tapRef = useRef<((p: LngLat) => void) | null>(null); // only Play listens for taps
@@ -137,7 +138,7 @@ function CourseBody({ course, features }: { course: Course; features: FeatureCol
       )}
       {phase === 'play' && hole && (
         <Play
-          key={course.id}
+          key={hole.number}
           course={course}
           features={features}
           hole={hole}
@@ -146,8 +147,12 @@ function CourseBody({ course, features }: { course: Course; features: FeatureCol
           error={error}
           scene={scene}
           weather={weather}
+          flat={flat}
+          setFlat={setFlat}
           setTap={(f) => (tapRef.current = f)}
           onExit={() => {
+            scene.current?.setFlat(false);
+            setFlat(false);
             setPhase('overview');
             router.setParams({ hole: '' });
           }}
@@ -464,7 +469,10 @@ function GreenStat({ g }: { g: { front: number; center: number; back: number } }
   );
 }
 
-const signed = (y: number) => `${y >= 0 ? '+' : '−'}${Math.abs(Math.round(y))}`;
+const signed = (y: number) => {
+  const r = Math.round(y);
+  return `${r >= 0 ? '+' : '−'}${Math.abs(r)}`;
+};
 
 function Play({
   course,
@@ -475,6 +483,8 @@ function Play({
   error,
   scene,
   weather,
+  flat,
+  setFlat,
   setTap,
   onExit,
 }: {
@@ -486,26 +496,19 @@ function Play({
   error: string | null;
   scene: React.RefObject<CourseSceneHandle | null>;
   weather: ReturnType<typeof useWeather>;
+  flat: boolean;
+  setFlat: (f: boolean) => void;
   setTap: (f: ((p: LngLat) => void) | null) => void;
   onExit: () => void;
 }) {
   const router = useRouter();
   const { settings } = useSettings();
   const loc = useLocation();
-  const [flat, setFlat] = useState(false);
   const [mode, setMode] = useState<TapMode>('target');
   const [target, setTarget] = useState<LngLat | null>(null);
   const [ball, setBall] = useState<LngLat | null>(null);
   const [teeMoved, setTeeMoved] = useState<LngLat | null>(() => teeFor(course.id, hole.number));
   const [recenter, setRecenter] = useState(0);
-
-  // a new hole starts fresh, on its (possibly moved) tee
-  useEffect(() => {
-    setTarget(null);
-    setBall(null);
-    setMode('target');
-    setTeeMoved(teeFor(course.id, hole.number));
-  }, [hole.number]);
 
   const tee = teeMoved ?? hole.playLine[0]!;
   const d = computeDistances(hole, features, loc, target, { tee, ball });
@@ -520,7 +523,16 @@ function Play({
       ? { at: fix.at, headingDeg: fix.headingDeg }
       : null;
 
-  const key = [from, aim, tee, target, driving?.at, driving?.headingDeg, stats?.club].join('|');
+  const key = [
+    from,
+    aim,
+    tee,
+    target,
+    driving?.at,
+    driving?.headingDeg,
+    stats?.club,
+    stats?.playsLike,
+  ].join('|');
   useEffect(() => {
     if (!ready) return;
     scene.current?.setShot({
@@ -549,7 +561,9 @@ function Play({
     return () => setTap(null);
   }, [mode, hole.number]);
 
-  const holes = holesFor(course, round.nine);
+  // a deep link outside the chosen nine navigates the whole course
+  const nine = holesFor(course, round.nine);
+  const holes = nine.some((h) => h.number === hole.number) ? nine : course.holes;
   const idx = holes.findIndex((h) => h.number === hole.number);
   const go = (k: number) => {
     const h = holes[k - 1] ?? null; // k counts within the chosen nine
@@ -680,7 +694,7 @@ function Play({
             <Text style={{ color: colors.warn }}>{error}</Text>
           ) : !ready ? (
             <Text style={{ color: colors.muted }}>Building the course…</Text>
-          ) : d.offCourse ? null : (
+          ) : (
             <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 14 }}>
               <View style={{ flex: 1, gap: 2 }}>
                 <Text
@@ -733,7 +747,7 @@ function Play({
             </View>
           )}
 
-          {ready && stats && !d.offCourse && (
+          {ready && stats && (
             <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
               <Stat k="ELEV" v={`${signed(stats.elevation)} · ${elevUnits(m!.dz)}`} />
               {settings.weather ? (
