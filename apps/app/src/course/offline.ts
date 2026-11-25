@@ -1,5 +1,5 @@
 /**
- * "Download for offline": puts the course package and every imagery tile into Cache Storage.
+ * "Download for offline": puts the app shell and the course package into Cache Storage.
  * public/sw.js serves /courses/** from these caches when the network is unavailable.
  */
 interface Opts {
@@ -7,6 +7,8 @@ interface Opts {
   caches?: CacheStorage;
   onProgress?: (done: number, total: number) => void;
 }
+
+import { GROUND_FILES } from '../scene/ground';
 
 const MARKER = '.complete';
 const cacheName = (id: string, version: string) => `course-${id}-${version}`;
@@ -35,9 +37,6 @@ export async function downloadForOffline(
   const { fetcher, caches } = env(o);
   if (!caches) throw new Error('Offline storage is not available in this browser');
   const base = `/courses/${id}`;
-  const idx = await fetcher(`${base}/tiles/index.json`);
-  if (!idx.ok) throw new Error(`Could not get the tile list (${idx.status})`);
-  const tiles = (await idx.json()) as string[];
   // App shell (index.html, every JS chunk, map worker) listed at build time by scripts/shell-manifest.mjs
   const sh = await fetcher('/shell.json');
   // (missing in dev, where the SPA fallback answers with HTML)
@@ -49,7 +48,7 @@ export async function downloadForOffline(
     `${base}/features.geojson`,
     `${base}/scenery.geojson`,
     `${base}/elevation-course.bin`,
-    ...tiles.map((t) => `${base}/tiles/${t}`),
+    ...GROUND_FILES.map((f) => `${base}/${f}`),
   ];
   const name = cacheName(id, version);
   const cache = await caches.open(name);

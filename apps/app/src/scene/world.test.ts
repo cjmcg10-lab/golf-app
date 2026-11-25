@@ -1,8 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { heightAt, parseGelv } from './elevation';
 import { makeFrame } from './frame';
-import { buildPathGraph, pointAlong, route } from './paths';
-import { IMPACT_T, SWING_END, swingPose } from './swing';
 import { placeTrees } from './trees';
 
 function gelv(w: number, h: number, values: number[], base = 10, scale = 0.5) {
@@ -52,8 +50,20 @@ describe('frame', () => {
 });
 
 describe('trees', () => {
-  const area: [number, number][] = [[0, 0], [100, 0], [100, 100], [0, 100], [0, 0]];
-  const hole: [number, number][] = [[40, 40], [60, 40], [60, 60], [40, 60], [40, 40]];
+  const area: [number, number][] = [
+    [0, 0],
+    [100, 0],
+    [100, 100],
+    [0, 100],
+    [0, 0],
+  ];
+  const hole: [number, number][] = [
+    [40, 40],
+    [60, 40],
+    [60, 60],
+    [40, 60],
+    [40, 40],
+  ];
   test('insideAreasOutsideAvoid', () => {
     const t = placeTrees([area], [hole], 6, 1);
     expect(t.length).toBeGreaterThan(150);
@@ -64,40 +74,5 @@ describe('trees', () => {
   });
   test('deterministic', () => {
     expect(placeTrees([area], [], 6, 3)).toEqual(placeTrees([area], [], 6, 3));
-  });
-});
-
-describe('cart paths', () => {
-  const a: [number, number][] = [[0, 0], [50, 0]];
-  const b: [number, number][] = [[52, 1], [52, 60]]; // starts 2 m from a's end
-  const far: [number, number][] = [[200, 200], [250, 200]];
-  const g = buildPathGraph([a, b, far], 4);
-  test('routesAcrossJoinedSegments', () => {
-    const r = route(g, [0, -5], [52, 65]);
-    expect(r[0]).toEqual([0, -5]);
-    expect(r.at(-1)).toEqual([52, 65]);
-    expect(r.some(([e, n]) => e === 50 && n === 0)).toBe(true);
-    expect(r.some(([e, n]) => e === 52 && n === 60)).toBe(true);
-  });
-  test('fallsBackToStraightLineWhenUnconnected', () => {
-    expect(route(g, [0, 0], [250, 200])).toEqual([[0, 0], [250, 200]]);
-  });
-  test('pointAlongInterpolatesWithHeading', () => {
-    const p = pointAlong([[0, 0], [10, 0], [10, 10]], 15);
-    expect(p.pos).toEqual([10, 5]);
-    expect(p.heading).toBeCloseTo(0, 5); // due north
-    expect(pointAlong([[0, 0], [10, 0]], 99).done).toBe(true);
-  });
-});
-
-describe('swing', () => {
-  test('addressImpactAndTop', () => {
-    const a = swingPose(0);
-    const top = swingPose(IMPACT_T - 0.3);
-    const hit = swingPose(IMPACT_T);
-    expect(top.shoulderTurn).toBeGreaterThan(1.3);
-    expect(top.armLift).toBeGreaterThan(1.5);
-    expect(Math.abs(hit.armLift - a.armLift)).toBeLessThan(0.15);
-    expect(swingPose(SWING_END + 3)).toEqual(swingPose(SWING_END));
   });
 });

@@ -1,6 +1,6 @@
 import type { Weather } from '@golf/physics';
-import type { ReactNode } from 'react';
-import { Platform, Pressable, Text, View, type ViewStyle } from 'react-native';
+import { useEffect, useRef, type ReactNode } from 'react';
+import { Animated, Platform, Pressable, Text, View, type ViewStyle } from 'react-native';
 import { colors, fonts, mintGradient } from '../theme';
 
 const web = Platform.OS === 'web';
@@ -126,5 +126,84 @@ export function WeatherPill({ wx, live }: { wx: Weather; live: boolean }) {
           : 'Standard air · no live weather'}
       </Text>
     </Glass>
+  );
+}
+
+/** Pill-shaped segmented control. */
+export function Segmented<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: T;
+  options: [T, string][];
+  onChange: (v: T) => void;
+}) {
+  return (
+    <View
+      accessibilityRole="radiogroup"
+      accessibilityLabel={label}
+      style={{
+        flexDirection: 'row',
+        backgroundColor: 'rgba(255,255,255,0.06)',
+        borderRadius: 12,
+        padding: 3,
+        gap: 2,
+      }}
+    >
+      {options.map(([v, text]) => {
+        const on = v === value;
+        return (
+          <Pressable
+            key={v}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: on }}
+            accessibilityLabel={text}
+            onPress={() => onChange(v)}
+            style={{
+              paddingHorizontal: 12,
+              paddingVertical: 7,
+              borderRadius: 9,
+              backgroundColor: on ? colors.accent : 'transparent',
+            }}
+          >
+            <Text
+              style={{
+                color: on ? colors.onAccent : colors.text,
+                fontWeight: '800',
+                fontSize: 13,
+                fontFamily: fonts.heading,
+              }}
+            >
+              {text}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+/** Slides and fades its children in when it mounts (use a `key` to replay). */
+export function Rise({ children, style }: { children: ReactNode; style?: ViewStyle }) {
+  const k = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(k, { toValue: 1, duration: 380, useNativeDriver: false }).start();
+  }, [k]);
+  return (
+    <Animated.View
+      pointerEvents="box-none"
+      style={[
+        style,
+        {
+          opacity: k,
+          transform: [{ translateY: k.interpolate({ inputRange: [0, 1], outputRange: [28, 0] }) }],
+        },
+      ]}
+    >
+      {children}
+    </Animated.View>
   );
 }

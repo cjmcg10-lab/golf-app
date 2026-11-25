@@ -33,14 +33,10 @@ class FakeCaches {
   }
 }
 
-const tiles = ['15/1/2.jpg', '16/3/4.jpg', '17/7/8.jpg'];
-const fetcher = (async (url: string) =>
-  url.endsWith('index.json')
-    ? new Response(JSON.stringify(tiles))
-    : new Response(`bytes:${url}`)) as typeof fetch;
+const fetcher = (async (url: string) => new Response(`bytes:${url}`)) as typeof fetch;
 
 describe('offline', () => {
-  test('downloadCachesAllTiles', async () => {
+  test('downloadCachesCoursePackage', async () => {
     const cs = new FakeCaches();
     const progress: number[] = [];
     const r = await downloadForOffline('mini', '1', {
@@ -49,16 +45,17 @@ describe('offline', () => {
       onProgress: (done, total) => progress.push(done / total),
     });
     const cache = cs.caches.get('course-mini-1')!;
-    expect(r.files).toBe(7);
+    expect(r.files).toBe(8);
     // '.complete' is the marker written last, after every file succeeded
     expect([...cache.store.keys()].filter((k) => !k.endsWith('.complete')).sort()).toEqual([
       '/courses/mini/course.json',
       '/courses/mini/elevation-course.bin',
       '/courses/mini/features.geojson',
+      '/courses/mini/ground-0.png',
+      '/courses/mini/ground-1.png',
+      '/courses/mini/ground-2.png',
+      '/courses/mini/ground-3.png',
       '/courses/mini/scenery.geojson',
-      '/courses/mini/tiles/15/1/2.jpg',
-      '/courses/mini/tiles/16/3/4.jpg',
-      '/courses/mini/tiles/17/7/8.jpg',
     ]);
     expect(progress.at(-1)).toBe(1);
     expect(r.bytes).toBeGreaterThan(0);
@@ -84,10 +81,10 @@ describe('offline', () => {
   test('failedFileRejects', async () => {
     const cs = new FakeCaches();
     const flaky = (async (url: string) =>
-      url.includes('16/3/4') ? new Response('', { status: 500 }) : fetcher(url)) as typeof fetch;
+      url.includes('ground-2') ? new Response('', { status: 500 }) : fetcher(url)) as typeof fetch;
     await expect(
       downloadForOffline('mini', '1', { fetcher: flaky, caches: cs as unknown as CacheStorage }),
-    ).rejects.toThrow(/16\/3\/4/);
+    ).rejects.toThrow(/ground-2/);
     expect(
       await isDownloaded('mini', '1', { fetcher, caches: cs as unknown as CacheStorage }),
     ).toBe(false);
@@ -95,7 +92,7 @@ describe('offline', () => {
 
   test('appShellCachedWithDownload', async () => {
     const cs = new FakeCaches();
-    const shell = ['/', '/_expo/static/js/web/info-abc.js', '/maplibre-gl-worker.mjs'];
+    const shell = ['/', '/_expo/static/js/web/info-abc.js', '/courses/index.json'];
     const f = (async (url: string) =>
       url === '/shell.json' ? new Response(JSON.stringify(shell)) : fetcher(url)) as typeof fetch;
     const r = await downloadForOffline('mini', '1', {
@@ -104,17 +101,17 @@ describe('offline', () => {
     });
     const keys = [...cs.caches.get('course-mini-1')!.store.keys()];
     for (const k of shell) expect(keys).toContain(k);
-    expect(r.files).toBe(10);
+    expect(r.files).toBe(11);
   });
 
   test('noProgressAfterFailure', async () => {
     const cs = new FakeCaches();
-    const many = Array.from({ length: 30 }, (_, i) => `15/${i}/0.jpg`);
+    const many = Array.from({ length: 30 }, (_, i) => `/_expo/static/js/web/c${i}.js`);
     const tick = () => new Promise((r) => setTimeout(r, 1));
     const slow = (async (url: string) => {
-      if (url.endsWith('index.json')) return new Response(JSON.stringify(many));
+      if (url === '/shell.json') return new Response(JSON.stringify(many));
       await tick();
-      return url.includes('15/0/0') ? new Response('', { status: 500 }) : new Response('x');
+      return url.endsWith('/c0.js') ? new Response('', { status: 500 }) : new Response('x');
     }) as typeof fetch;
     let calls = 0;
     await expect(

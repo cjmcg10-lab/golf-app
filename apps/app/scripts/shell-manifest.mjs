@@ -13,6 +13,6 @@ const files = readdirSync(resolve(dist, '_expo'), { recursive: true, withFileTyp
         .slice(dist.length + 1)
         .replaceAll('\\', '/'),
   );
-const shell = ['/', '/maplibre-gl-worker.mjs', ...files.sort()];
+const shell = ['/', '/courses/index.json', ...files.sort()];
 writeFileSync(resolve(dist, 'shell.json'), JSON.stringify(shell));
 console.log(`shell.json: ${shell.length} files`);

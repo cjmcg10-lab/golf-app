@@ -1,5 +1,12 @@
 import * as THREE from 'three';
-import type { SwingPose } from './swing';
+
+/** Joint angles (radians) of the address position. */
+interface Pose {
+  hipTurn: number;
+  shoulderTurn: number;
+  armLift: number;
+  wristCock: number;
+}
 
 const mat = (color: string | number) => new THREE.MeshLambertMaterial({ color, flatShading: true });
 const box = (w: number, h: number, d: number, m: THREE.Material) =>
@@ -17,7 +24,6 @@ const SKIN = ['#f1c7a5', '#d9a47e', '#a86f4c', '#7a4a31'];
 
 export interface Golfer {
   root: THREE.Group;
-  applySwing(p: SwingPose): void;
   stand(): void;
   sit(): void;
   relax(): void;
@@ -84,7 +90,7 @@ export function makeGolfer(seed = 0): Golfer {
   club.add(at(cyl(0.011, 0.011, 0.78, 5, steel), 0, -0.55, 0));
   club.add(at(box(0.09, 0.05, 0.05, steel), 0.03, -0.95, 0));
 
-  const pose = (p: SwingPose) => {
+  const pose = (p: Pose) => {
     hips.rotation.y = -p.hipTurn;
     shoulders.rotation.y = -(p.shoulderTurn - p.hipTurn);
     arms.rotation.x = -p.armLift;
@@ -93,7 +99,6 @@ export function makeGolfer(seed = 0): Golfer {
 
   return {
     root,
-    applySwing: pose,
     stand() {
       torso.rotation.x = 0.42;
       for (const l of legs) {

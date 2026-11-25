@@ -6,9 +6,8 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { heightAt, type ElevationGrid } from './elevation';
 import { makeFrame, type Frame } from './frame';
 import { distToSegment, inRing, rng, type EN } from './geom';
-import { makeBystander, makeCart, makeFlag, makeTeeMarker } from './models';
-import { GROUND, paintGround, type Area, type Strip } from './paint';
-import { buildPathGraph, type PathGraph } from './paths';
+import { GROUND, groundMaterial } from './ground';
+import { makeBystander, makeCart, makeFlag } from './models';
 import { placeTrees, type TreeSpot } from './trees';
 
 /**
@@ -21,7 +20,6 @@ export interface World {
   frame: Frame;
   size: { w: number; h: number };
   base: number;
-  paths: PathGraph;
   pathLines: EN[][];
   /** Ground height (scene y) at local metres. */
   y(e: number, n: number): number;
@@ -32,7 +30,16 @@ export interface World {
 }
 
 const CARTPATH_W = 2.4;
-const TEX_W = 4096;
+
+interface Area {
+  kind: string;
+  rings: EN[][];
+}
+interface Strip {
+  kind: 'cartpath' | 'road';
+  pts: EN[];
+  width: number;
+}
 
 const polys = (fc: FeatureCollection, kind: string) =>
   fc.features.filter(
@@ -49,6 +56,7 @@ export function buildWorld(
   features: FeatureCollection,
   scenery: FeatureCollection,
   grid: ElevationGrid,
+  fields: THREE.Texture[],
 ): World {
   const east = grid.west + grid.width * grid.dlon;
   const south = grid.north - grid.height * grid.dlat;
@@ -65,23 +73,11 @@ export function buildWorld(
     return heightAt(grid, lon, lat) - base;
   };
 
-  // ---- ground areas ----
-  const holeBearing = new Map<number, number>();
-  for (const h of course.holes) {
-    const a = frame.toEN(...h.playLine[0]!);
-    const b = frame.toEN(...h.playLine.at(-1)!);
-    holeBearing.set(h.number, (Math.atan2(b[0] - a[0], b[1] - a[1]) * 180) / Math.PI);
-  }
+  // ---- ground areas (for tree placement and surface lookups; the look comes from the fields) ----
   const areas: Area[] = [];
   for (const kind of ['fairway', 'green', 'tee', 'bunker', 'water', 'trees', 'clubhouse'])
-    for (const f of polys(features, kind)) {
-      const hole = f.properties?.hole as number | undefined;
-      areas.push({
-        kind,
-        rings: f.geometry.coordinates.map(ring),
-        stripeDeg: (holeBearing.get(hole ?? 0) ?? 0) - 90,
-      });
-    }
+    for (const f of polys(features, kind))
+      areas.push({ kind, rings: f.geometry.coordinates.map(ring) });
   for (const f of polys(scenery, 'parking'))
     areas.push({ kind: 'parking', rings: f.geometry.coordinates.map(ring) });
   const pathLines = lines(features, 'cartpath').map((f) => ring(f.geometry.coordinates));
@@ -108,19 +104,18 @@ export function buildWorld(
   ];
   const trees = placeTrees(outer('trees'), avoid, 6.5, 7, clearOfLines);
 
-  // ---- ground texture ----
-  const pxPerM = TEX_W / size.w;
+  // ---- tree shadows: soft, so a low-resolution canvas is enough ----
   const canvas = document.createElement('canvas');
-  canvas.width = TEX_W;
-  canvas.height = Math.min(4096, 2 ** Math.ceil(Math.log2(size.h * pxPerM)));
-  const sy = canvas.height / size.h;
-  const toPx = ([e, n]: EN): [number, number] => [(e - w0) * pxPerM, (n1 - n) * sy];
+  canvas.width = 2048;
+  canvas.height = Math.round((2048 * size.h) / size.w);
+  const pxPerM = canvas.width / size.w;
+  const toPx = ([e, n]: EN): [number, number] => [(e - w0) * pxPerM, (n1 - n) * pxPerM];
   const ctx = canvas.getContext('2d')!;
-  paintGround(ctx, toPx, pxPerM, areas, strips, null);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   paintTreeShadows(ctx, toPx, pxPerM, trees);
   const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 8;
+  tex.colorSpace = THREE.NoColorSpace;
 
   const group = new THREE.Group();
 
@@ -131,7 +126,7 @@ export function buildWorld(
   for (let e = w0 + 0.5; e <= e1 - 0.5; e += step) xs.push(e);
   for (let n = n1 - 0.5; n >= s0 + 0.5; n -= step) zs.push(n);
   const terrain = gridMesh(xs, zs, hAt, (e, n) => [(e - w0) / size.w, (n - s0) / size.h]);
-  const terrainMesh = new THREE.Mesh(terrain, new THREE.MeshLambertMaterial({ map: tex }));
+  const terrainMesh = new THREE.Mesh(terrain, groundMaterial(fields, tex));
   group.add(terrainMesh);
   const ap = apron(xs, zs, hAt);
   group.add(ap.mesh);
@@ -152,20 +147,10 @@ export function buildWorld(
 
   // ---- flags, tee markers and a few groups of golfers around the course ----
   const v = (p: EN, lift = 0) => new THREE.Vector3(p[0], hAt(p[0], p[1]) + lift, -p[1]);
-  const paths = buildPathGraph(pathLines, 3);
   for (const h of course.holes) {
     const flag = makeFlag(h.number % 2 ? '#ff4d4d' : '#ffd23f');
     flag.position.copy(v(frame.toEN(...h.pin)));
     group.add(flag);
-    const tee = frame.toEN(...h.playLine[0]!);
-    const nxt = frame.toEN(...h.playLine[1]!);
-    const len = Math.hypot(nxt[0] - tee[0], nxt[1] - tee[1]) || 1;
-    const side: EN = [(nxt[1] - tee[1]) / len, -(nxt[0] - tee[0]) / len];
-    for (const s of [-1, 1]) {
-      const m = makeTeeMarker('#3f7fe0');
-      m.position.copy(v([tee[0] + side[0] * s * 3, tee[1] + side[1] * s * 3], 0.1));
-      group.add(m);
-    }
   }
   const r = rng(5);
   for (const n of [3, 7, 11, 16]) {
@@ -198,7 +183,6 @@ export function buildWorld(
     frame,
     size,
     base,
-    paths,
     pathLines,
     y: hAt,
     toScene: (p, lift = 0) => v(frame.toEN(...p), lift),
@@ -345,7 +329,7 @@ function apron(
     an,
     relax,
     undefined,
-    () => new THREE.Color(GROUND.surround).offsetHSL(0, 0, (tone() - 0.5) * 0.03),
+    () => new THREE.Color(GROUND.rough).offsetHSL(0, 0, (tone() - 0.5) * 0.03),
     (e, n) => e > ea && e < eb && n > nb && n < na,
   );
   return {

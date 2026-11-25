@@ -2,7 +2,12 @@ import type { LngLat } from '@golf/course-schema';
 import { useEffect, useState } from 'react';
 
 export interface LocationState {
-  fix: { at: LngLat; accuracyM: number } | null;
+  fix: {
+    at: LngLat;
+    accuracyM: number;
+    speedMps: number | null; // ground speed, when the device reports it
+    headingDeg: number | null; // course over ground (0 = north), when moving
+  } | null;
   status: 'pending' | 'ok' | 'denied' | 'unavailable';
 }
 
@@ -19,7 +24,12 @@ export function useLocation(): LocationState {
     const id = geo.watchPosition(
       (p) =>
         setState({
-          fix: { at: [p.coords.longitude, p.coords.latitude], accuracyM: p.coords.accuracy },
+          fix: {
+            at: [p.coords.longitude, p.coords.latitude],
+            accuracyM: p.coords.accuracy,
+            speedMps: Number.isFinite(p.coords.speed) ? p.coords.speed : null,
+            headingDeg: Number.isFinite(p.coords.heading) ? p.coords.heading : null,
+          },
           status: 'ok',
         }),
       (e) =>

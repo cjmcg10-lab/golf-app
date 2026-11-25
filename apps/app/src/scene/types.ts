@@ -1,23 +1,24 @@
 import type { Course, LngLat } from '@golf/course-schema';
-import type { Advice } from '@golf/physics';
 import type { FeatureCollection } from 'geojson';
 
-export interface ShotSetup {
-  start: LngLat;
-  target: LngLat | null; // null = aim at the green
-  aim: LngLat; // where the golfer faces (target, or the green)
-  advice: Advice | null; // predicted flight is drawn when present
+/** What the scene shows for the current shot. Changing it never moves the camera. */
+export interface ShotState {
+  tee: LngLat | null; // tee markers
+  ball: LngLat | null; // the golfer stands here, facing `aim`
+  target: LngLat | null; // landing spot marker
+  aim: LngLat | null; // where the golfer faces (the target, else the green)
+  flight: [number, number, number][] | null; // predicted flight from the ball: x east, y north, z up (m)
+  /** GPS says the player is driving: show them seated in a cart here, heading = course over ground. */
+  driving: { at: LngLat; headingDeg: number } | null;
 }
 
 export interface CourseSceneHandle {
-  overview(): void;
-  focusHole(n: number): void;
-  setShot(s: ShotSetup): void;
-  /** Swing, fly and roll; resolves with where the ball stopped (null = in the water,
-   *  undefined = interrupted). */
-  hit(a: Advice): Promise<LngLat | null | undefined>;
-  /** Golfer climbs in, the cart drives the cart paths, golfer gets out at `to` facing `face`. */
-  driveTo(to: LngLat, face: LngLat): Promise<boolean>; // false = interrupted
+  /** Whole course. */
+  overview(secs?: number): void;
+  /** Frame a shot from `from` toward `to` (3D: from behind; 2D: top-down with `to` up). */
+  frame(from: LngLat, to: LngLat, secs?: number): void;
+  setShot(s: ShotState): void;
+  setFlat(flat: boolean): void;
   /** Yards, bearing and height change (m) from a to b on the terrain; null until loaded. */
   measure(a: LngLat, b: LngLat): { yards: number; bearing: number; dz: number } | null;
 }

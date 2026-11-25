@@ -17,3 +17,14 @@ test('skipsTeeSetWithoutYards', () => {
 test('fallsBackToMeasured', () => {
   expect(displayYards(hole, course([]))).toEqual({ yards: 93, tee: null });
 });
+
+test('chosenTeeSetWins', () => {
+  expect(displayYards(hole, course(['blue', 'white']), 'white')).toEqual({
+    yards: 96,
+    tee: 'WHITE',
+  });
+});
+
+test('chosenTeeSetWithoutYardsFallsBack', () => {
+  expect(displayYards(hole, course(['blue', 'red']), 'red')).toEqual({ yards: 120, tee: 'BLUE' });
+});

@@ -10,8 +10,16 @@ from shapely.geometry import LineString, Polygon, box, mapping
 from .osm import _coords, _index
 
 ROAD_WIDTH_M = {
-    "motorway": 12.0, "trunk": 10.0, "primary": 9.0, "secondary": 8.0, "tertiary": 7.0,
-    "residential": 6.0, "unclassified": 6.0, "service": 4.0, "footway": 1.5, "path": 1.5,
+    "motorway": 12.0,
+    "trunk": 10.0,
+    "primary": 9.0,
+    "secondary": 8.0,
+    "tertiary": 7.0,
+    "residential": 6.0,
+    "unclassified": 6.0,
+    "service": 4.0,
+    "footway": 1.5,
+    "path": 1.5,
 }
 
 

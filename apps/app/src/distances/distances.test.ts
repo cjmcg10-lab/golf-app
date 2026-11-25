@@ -1,13 +1,8 @@
-// @vitest-environment jsdom
 import type { Hole, LngLat } from '@golf/course-schema';
 import { distanceYards } from '@golf/geo';
-import { cleanup, render, screen } from '@testing-library/react';
 import type { FeatureCollection } from 'geojson';
-import { afterEach, describe, expect, test } from 'vitest';
-import { DistancePanel } from './DistancePanel';
-import { computeDistances } from './useDistances';
-
-afterEach(cleanup);
+import { describe, expect, test } from 'vitest';
+import { computeDistances } from './distances';
 
 const hole: Hole = {
   number: 1,
@@ -44,7 +39,10 @@ const features: FeatureCollection = {
     },
   ],
 };
-const fixAt = (at: LngLat, accuracyM = 5) => ({ fix: { at, accuracyM }, status: 'ok' as const });
+const fixAt = (at: LngLat, accuracyM = 5) => ({
+  fix: { at, accuracyM, speedMps: null, headingDeg: null },
+  status: 'ok' as const,
+});
 const fairway: LngLat = [-72.8675, 41.566];
 
 describe('computeDistances', () => {
@@ -90,36 +88,19 @@ describe('computeDistances', () => {
     const d = computeDistances(hole, features, fixAt([-72.81, 41.566]), target);
     expect(d.toTarget).toBeCloseTo(distanceYards(hole.playLine[0]!, target), 6);
   });
-});
 
-describe('DistancePanel', () => {
-  test('showsCenterFrontBack', () => {
-    render(<DistancePanel d={computeDistances(hole, features, fixAt(fairway), null)} />);
-    const c = Math.round(distanceYards(fairway, hole.green.center));
-    expect(screen.getByLabelText('Center of green').textContent).toBe(String(c));
+  test('movedTeeIsTheOriginWithoutGps', () => {
+    const tee: LngLat = [-72.8685, 41.566];
+    const d = computeDistances(hole, features, { fix: null, status: 'denied' }, null, { tee });
+    expect(d.from).toEqual(tee);
+    expect(d.green!.center).toBeCloseTo(distanceYards(tee, hole.green.center), 6);
   });
 
-  test('farFromCoursePanel', () => {
-    render(<DistancePanel d={computeDistances(hole, features, fixAt([-72.81, 41.566]), null)} />);
-    expect(screen.getByLabelText('Center of green').textContent).toBe('—');
-    expect(screen.getByText('You’re not on the course')).toBeTruthy();
-  });
-
-  test('permissionDeniedPanel', () => {
-    render(
-      <DistancePanel d={computeDistances(hole, features, { fix: null, status: 'denied' }, null)} />,
-    );
-    expect(screen.getByText('Location is off — distances are from the tee')).toBeTruthy();
-  });
-
-  test('lowAccuracyPanel', () => {
-    render(<DistancePanel d={computeDistances(hole, features, fixAt(fairway, 45), null)} />);
-    expect(screen.getByText('GPS ±49 yds')).toBeTruthy();
-  });
-
-  test('targetPanel', () => {
-    const target: LngLat = [-72.867, 41.566];
-    render(<DistancePanel d={computeDistances(hole, features, fixAt(fairway), target)} />);
-    expect(screen.getByText(/^To target \d+ · then \d+ to green$/)).toBeTruthy();
+  test('placedBallBeatsGps', () => {
+    const ball: LngLat = [-72.8672, 41.566];
+    const d = computeDistances(hole, features, fixAt(fairway), null, { ball });
+    expect(d.origin).toBe('ball');
+    expect(d.from).toEqual(ball);
+    expect(d.notice).toBeNull();
   });
 });

@@ -1,14 +1,14 @@
 import type { Hole, LngLat } from '@golf/course-schema';
 import { distanceYards, greenDistances, hazardDistances, type HazardDistance } from '@golf/geo';
 import type { FeatureCollection } from 'geojson';
-import { useMemo } from 'react';
 import type { LocationState } from '../location/useLocation';
 
 export const OFF_COURSE_YARDS = 1000;
 const LOW_ACCURACY_M = 30;
 
 export interface Distances {
-  origin: 'gps' | 'tee';
+  origin: 'gps' | 'tee' | 'ball';
+  from: LngLat;
   offCourse: boolean;
   green: { front: number; center: number; back: number } | null;
   hazards: HazardDistance[];
@@ -23,21 +23,24 @@ export function computeDistances(
   features: FeatureCollection,
   loc: LocationState,
   target: LngLat | null,
+  opts: { tee?: LngLat | null; ball?: LngLat | null } = {},
 ): Distances {
-  const tee = hole.playLine[0]!;
+  const tee = opts.tee ?? hole.playLine[0]!;
+  const ball = opts.ball ?? null;
   const gps = loc.fix?.at ?? null;
-  const offCourse = !!gps && distanceYards(gps, hole.green.center) > OFF_COURSE_YARDS;
-  const useGps = !!gps && !offCourse;
-  const from = useGps ? gps : tee;
+  const offCourse = !ball && !!gps && distanceYards(gps, hole.green.center) > OFF_COURSE_YARDS;
+  const useGps = !ball && !!gps && !offCourse;
+  const from = ball ?? (useGps ? gps : tee);
   let notice: string | null = null;
   if (offCourse) notice = 'You’re not on the course';
-  else if (!gps)
+  else if (!gps && !ball)
     notice =
       loc.status === 'pending'
         ? 'Finding your location — distances are from the tee'
         : 'Location is off — distances are from the tee';
   return {
-    origin: useGps ? 'gps' : 'tee',
+    origin: ball ? 'ball' : useGps ? 'gps' : 'tee',
+    from,
     offCourse,
     green: offCourse ? null : greenDistances(from, hole),
     hazards: offCourse ? [] : hazardDistances(from, hole, features),
@@ -49,16 +52,4 @@ export function computeDistances(
         : null,
     notice,
   };
-}
-
-export function useDistances(
-  hole: Hole,
-  features: FeatureCollection,
-  loc: LocationState,
-  target: LngLat | null,
-): Distances {
-  return useMemo(
-    () => computeDistances(hole, features, loc, target),
-    [hole, features, loc, target],
-  );
 }

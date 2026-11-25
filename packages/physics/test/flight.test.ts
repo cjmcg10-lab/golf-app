@@ -22,7 +22,9 @@ describe('ball flight', () => {
 
   test('thinAirAndHeatFlyFurther', () => {
     expect(carry('7 Iron', { ...STD_AIR, hPa: 840 })).toBeGreaterThan(carry('7 Iron') + 10);
-    expect(carry('7 Iron', { ...STD_AIR, tempF: 95 })).toBeGreaterThan(carry('7 Iron', { ...STD_AIR, tempF: 35 }));
+    expect(carry('7 Iron', { ...STD_AIR, tempF: 95 })).toBeGreaterThan(
+      carry('7 Iron', { ...STD_AIR, tempF: 35 }),
+    );
   });
 
   test('headwindShortensTailwindLengthens', () => {
@@ -56,7 +58,8 @@ describe('caddy', () => {
     const wx = { ...STD_AIR, windMph: 12, windFromDeg: 270, tempF: 45 };
     const k = caddy(150, 30, -3, wx);
     const b = (30 * Math.PI) / 180;
-    const tx = Math.sin(b) * 150 * 0.9144, ty = Math.cos(b) * 150 * 0.9144;
+    const tx = Math.sin(b) * 150 * 0.9144,
+      ty = Math.cos(b) * 150 * 0.9144;
     expect(Math.hypot(k.flight.x - tx, k.flight.y - ty) / 0.9144).toBeLessThan(3);
     expect(k.aimDeg).toBeLessThan(30); // aims left (into the west wind)
   });

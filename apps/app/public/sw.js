@@ -1,5 +1,4 @@
 // Offline support for the web app.
-// - /courses/**/tiles/**: cache first (filled by "Download for offline")
 // - other /courses/** files: network first (3 s timeout), falling back to the downloaded copy
 // - app shell (pages, JS, CSS): network first, cached as it loads, served when offline
 const SHELL = 'app-shell';
@@ -27,11 +26,7 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET' || url.origin !== self.location.origin) return;
 
   if (url.pathname.startsWith('/courses/')) {
-    if (url.pathname.includes('/tiles/')) {
-      e.respondWith(fromCache(url.pathname).then((hit) => hit || fetch(req)));
-    } else {
-      e.respondWith(networkFirst(req, url.pathname));
-    }
+    e.respondWith(networkFirst(req, url.pathname));
     return;
   }
 

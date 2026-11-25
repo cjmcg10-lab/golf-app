@@ -2,8 +2,8 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
-import { CourseProvider } from '../src/course/CourseProvider';
 import { pruneAppShell } from '../src/course/offline';
+import { SettingsProvider } from '../src/settings/useSettings';
 import { colors, fonts } from '../src/theme';
 
 /** Ski-app type: Montserrat headings, Nunito Sans body (Google Fonts, web only). */
@@ -33,7 +33,7 @@ export default function RootLayout() {
     }
   }, []);
   return (
-    <CourseProvider>
+    <SettingsProvider>
       <StatusBar style="light" />
       <Stack
         screenOptions={{
@@ -43,6 +43,6 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: colors.bg },
         }}
       />
-    </CourseProvider>
+    </SettingsProvider>
   );
 }

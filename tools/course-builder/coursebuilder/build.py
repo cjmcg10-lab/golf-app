@@ -13,6 +13,7 @@ from shapely.geometry import shape
 from . import elevation
 from .derive import derive_holes
 from .elevation import deg_per_m, fetch_dem, green_surface, write_gelv
+from .ground import build_ground
 from .imagery import build_tiles
 from .manual import apply_manual, load_manual
 from .merge import merge_features
@@ -134,6 +135,8 @@ def build(course_id: str, skip_tiles=False, skip_elevation=False) -> int:
     (d / "course.json").write_text(json.dumps(_round(course), indent=1))
     (d / "features.geojson").write_text(json.dumps(_round(features)))
     (d / "scenery.geojson").write_text(json.dumps(_round(osm_to_scenery(osm, bbox))))
+    if (d / "elevation-course.bin").exists():
+        build_ground(d)  # crisp-edge ground fields for the 3D view
 
     res = subprocess.run(
         ["pnpm", "-s", "--filter", "@golf/course-schema", "validate", str(d)],

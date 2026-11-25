@@ -7,11 +7,37 @@ const course = JSON.parse(
 );
 const hole1 = course.holes[0];
 
-test('homeShowsCourse', async ({ page }) => {
+test('launchListsAndSearchesCourses', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByText('Southington Country Club').first()).toBeVisible();
-  await expect(page.getByRole('link', { name: /^Hole \d+$/ })).toHaveCount(18);
-  await expect(page.locator('canvas')).toHaveCount(1);
+  await expect(page.getByText('Choose your course')).toBeVisible();
+  await expect(page.getByTestId('golf-ball')).toBeVisible();
+  const card = page.getByRole('link', { name: 'Southington Country Club' });
+  await expect(card).toBeVisible();
+  await page.getByLabel('Search courses').fill('pebble');
+  await expect(card).toHaveCount(0);
+  await expect(page.getByText(/No courses match/)).toBeVisible();
+  await page.getByLabel('Search courses').fill('plantsville');
+  await expect(card).toBeVisible();
+});
+
+test('overviewToFirstHole', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Southington Country Club' }).click();
+  await page.getByRole('button', { name: 'Play here' }).click();
+  await page.getByRole('radio', { name: 'White tees' }).click();
+  await page.getByRole('button', { name: 'Start round' }).click();
+  await expect(page.getByText('Hole 1', { exact: true })).toBeVisible();
+  await expect(page.getByText(/^Par 4 · 377 yds \(White\) · HCP 7$/)).toBeVisible();
+  await expect(page.getByLabel('Plays like')).toHaveText(/^\d+ yds$/, { timeout: 45_000 });
+  await expect(page.getByTestId('course-3d').locator('canvas')).toHaveCount(1);
+});
+
+test('weatherCanBeTurnedOff', async ({ page }) => {
+  await page.goto('/settings');
+  await page.getByLabel('Account for weather').click();
+  await page.goto('/hole/1');
+  await expect(page.getByText('WEATHER', { exact: true })).toBeVisible({ timeout: 45_000 });
+  await expect(page.getByText('WIND', { exact: true })).toHaveCount(0);
 });
 
 test('holeOneLoads', async ({ page }) => {
@@ -27,7 +53,9 @@ test('geolocationMocked', async ({ browser }) => {
   });
   const page = await ctx.newPage();
   await page.goto('/hole/1');
-  const center = Number(await page.getByLabel('Center of green').textContent());
+  const green = page.getByLabel('Center of green');
+  await expect(green).toBeVisible({ timeout: 45_000 });
+  const center = Number(await green.textContent());
   expect(Math.abs(center - hole1.measuredYards)).toBeLessThanOrEqual(5);
   await ctx.close();
 });
@@ -35,7 +63,7 @@ test('geolocationMocked', async ({ browser }) => {
 test('locationDeniedFallsBackToTee', async ({ page }) => {
   await page.goto('/hole/1');
   await expect(page.getByText(/distances are from the tee/)).toBeVisible();
-  await expect(page.getByLabel('Center of green')).not.toHaveText('—');
+  await expect(page.getByLabel('Center of green')).toHaveText(/^\d+$/, { timeout: 45_000 });
 });
 
 test('infoCallLink', async ({ page }) => {
@@ -61,7 +89,7 @@ test('offlineAfterDownload', async ({ page, context }) => {
   await page.reload();
   await expect(page.getByText('Hole 1', { exact: true })).toBeVisible();
   await expect(page.getByText(/^Par 4 · 385 yds/)).toBeVisible();
-  await expect(page.locator('canvas')).toHaveCount(1);
+  await expect(page.getByTestId('course-3d').locator('canvas')).toHaveCount(1);
 });
 
 async function downloadCourse(page: import('@playwright/test').Page) {
@@ -87,20 +115,20 @@ test('stalledNetworkUsesDownloadedCourse', async ({ page, context }) => {
   await expect(page.getByText('Hole 1', { exact: true })).toBeVisible({ timeout: 8_000 });
 });
 
-test('holeShows3dCaddy', async ({ page }) => {
+test('tapSetsLandingSpot', async ({ page }) => {
   await page.goto('/hole/12');
-  await expect(page.getByTestId('course-3d')).toBeVisible();
-  await expect(page.getByLabel('Caddy club')).toBeVisible({ timeout: 45_000 });
-  await expect(page.getByRole('button', { name: 'Hit' })).toBeEnabled();
+  await expect(page.getByText('TO PIN')).toBeVisible({ timeout: 45_000 });
+  const box = (await page.getByTestId('course-3d').boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.35);
+  await expect(page.getByText('TO TARGET')).toBeVisible();
+  await page.getByRole('button', { name: 'Aim at pin' }).click();
+  await expect(page.getByText('TO PIN')).toBeVisible();
 });
 
-test('shotCompletesEvenIfViewToggled', async ({ page }) => {
-  await page.goto('/hole/12');
-  const hitBtn = page.getByRole('button', { name: 'Hit' });
-  await expect(hitBtn).toBeEnabled({ timeout: 45_000 });
-  await hitBtn.click();
-  await page.getByRole('button', { name: 'Show 2D map' }).click(); // ignored mid-shot
-  await expect(page.getByText(/· carry \d+ ·/)).toBeVisible({ timeout: 60_000 });
-  await expect(page.getByTestId('course-3d')).toBeVisible(); // still 3D: the toggle waited
-  await expect(page.getByRole('button', { name: /Drive the cart|Drive to hole/ })).toBeEnabled();
+test('twoDKeepsOneCanvas', async ({ page }) => {
+  await page.goto('/hole/1');
+  await expect(page.getByLabel('Plays like')).toHaveText(/^\d+ yds$/, { timeout: 45_000 });
+  await page.getByRole('button', { name: 'Show 2D map' }).click();
+  await expect(page.getByRole('button', { name: 'Show 3D course' })).toBeVisible();
+  await expect(page.getByTestId('course-3d').locator('canvas')).toHaveCount(1);
 });
