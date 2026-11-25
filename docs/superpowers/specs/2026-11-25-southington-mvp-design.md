@@ -1,6 +1,6 @@
 # Golf App — Southington Country Club MVP: Design
 
-Status: draft for approval · Date: 2026-11-25
+Status: approved 2026-11-25 · Date: 2026-11-25
 
 ## 1. Intent
 
@@ -289,9 +289,8 @@ account is admin); during testing the owner grants Pro to testers.
 - **M2** Web app: course + hole view, GPS distances, course info/tap-to-call; deployed to Cloudflare Pages.
 - **M3** Backend: accounts, bag, rounds, join by code, shared scorecard, live friend locations.
 - **M4** Physics + weather + plays-like + shot planner + auto caddy + green slope; tier gating.
-- **M5** Native dev build for Android with background location (free). iOS
-  dev build on a real iPhone needs the $99/yr Apple Developer membership; it
-  is done when the owner decides to pay (see §15).
+- **M5** Native dev builds for iOS and Android with background location
+  (owner already holds an Apple Developer membership). Web app comes first.
 - **Later**: mini-games, shot detection, personal launch data, more courses,
   automated AI segmentation, payments, store submission.
 
@@ -308,7 +307,6 @@ account is admin); during testing the owner grants Pro to testers.
 - Offline imagery via one-time course download.
 - No password-reset email during testing.
 - Pro granted via admin endpoint; gating active on the web test.
-- Android before iOS for native builds (iOS needs the Apple fee).
 
 ## 16. Left to the builder
 
